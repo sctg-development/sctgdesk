@@ -490,9 +490,9 @@ jobs:
         if: env.MACOS_P12_BASE64 != null && env.UPLOAD_ARTIFACT == 'true'
         run: |
           # Patch create-dmg to give more attempts to unmount image
-          CREATE_DMG="$(command -v create-dmg)"
-          CREATE_DMG="$(readlink -f "$CREATE_DMG")"
-          sed -i -e 's/MAXIMUM_UNMOUNTING_ATTEMPTS=3/MAXIMUM_UNMOUNTING_ATTEMPTS=7/' "$CREATE_DMG"
+          # CREATE_DMG="$(command -v create-dmg)"
+          # CREATE_DMG="$(readlink -f "$CREATE_DMG")"
+          # sed -i -e 's/MAXIMUM_UNMOUNTING_ATTEMPTS=3/MAXIMUM_UNMOUNTING_ATTEMPTS=7/' "$CREATE_DMG"
           # Unlock keychain
           security default-keychain -s rustdesk.keychain
           security unlock-keychain -p ${{ secrets.MACOS_P12_PASSWORD }} rustdesk.keychain
