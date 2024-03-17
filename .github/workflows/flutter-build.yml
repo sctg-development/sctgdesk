@@ -510,8 +510,8 @@ jobs:
           echo "Signing the dmg"
           codesign --force --options runtime -s "${{ secrets.MACOS_CODESIGN_IDENTITY }}" --deep --strict rustdesk-${{ env.VERSION }}.dmg -vvv
           # notarize the rustdesk-${{ env.VERSION }}.dmg
-          echo "Notarizing the dmg"
-          rcodesign notary-submit --api-key-path ${{ github.workspace }}/rustdesk.json  --staple rustdesk-${{ env.VERSION }}.dmg
+          # echo "Notarizing the dmg"
+          # rcodesign notary-submit --api-key-path ${{ github.workspace }}/rustdesk.json  --staple rustdesk-${{ env.VERSION }}.dmg
 
       - name: Rename rustdesk
         if: env.UPLOAD_ARTIFACT == 'true'
