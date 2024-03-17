@@ -1,3 +1,16 @@
+# needed secrets are
+# ANDROID_ALIAS
+# ANDROID_KEY_PASSWORD
+# ANDROID_KEY_STORE_PASSWORD
+# ANDROID_SIGNING_KEY
+# API_SERVER
+# MACOS_CODESIGN_IDENTITY
+# MACOS_NOTARIZE_JSON
+# MACOS_P12_BASE64
+# MACOS_P12_PASSWORD
+# RENDEZVOUS_SERVER
+# RS_PUB_KEY
+# SIGN_BASE_URL
 name: Build the flutter version of the RustDesk
 
 on:
@@ -34,6 +47,10 @@ env:
   API_SERVER: '${{ secrets.API_SERVER }}'
   UPLOAD_ARTIFACT: "${{ inputs.upload-artifact }}"
   SIGN_BASE_URL: "${{ secrets.SIGN_BASE_URL }}"
+  # build configuration
+  BUILD_ANDROID: "false"
+  BUILD_IOS: "false"
+  BUILD_WINDOWS_SCITER: "false"
 
 jobs:
   build-RustDeskTempTopMostWindow:
@@ -200,6 +217,8 @@ jobs:
           - { target: i686-pc-windows-msvc, os: windows-2019, arch: x86 }
           # - { target: aarch64-pc-windows-msvc, os: windows-2019 }
     steps:
+      - name: Check if BUILD_WINDOWS_SCITER is true
+        run: if [[ "${{ env.BUILD_WINDOWS_SCITER }}" != "true" ]]; then exit 1; fi
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@v6
         with:
@@ -519,6 +538,9 @@ jobs:
               extra-build-features: "",
             }
     steps:
+      - name: Check if BUILD_IOS is true
+        run: if [[ "${{ env.BUILD_IOS }}" != "true" ]]; then exit 1; fi
+        continue-on-error: true
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@v6
         with:
@@ -618,6 +640,8 @@ jobs:
               openssl-arch: android-arm
             }
     steps:
+      - name: Check if BUILD_ANDROID is true
+        run: if [[ "${{ env.BUILD_ANDROID }}" != "true" ]]; then exit 1; fi
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@v6
         with:
