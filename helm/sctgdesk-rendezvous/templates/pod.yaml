@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-hbb
+  labels:
+    app: {{ .Release.Name }}-hbb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-hbb
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-hbb
+    spec:
+      restartPolicy: Always
+      volumes:
+      - name: data
+        {{- if .Values.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ .Release.Name }}-pvc
+        {{- else }}
+        emptyDir: {}
+        {{- end }}
+      - name: secret-volume
+        secret:
+          secretName: {{ .Release.Name }}-secret
+      containers:
+      - name: hbbs
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        # command: [ "{{ .Values.hbbs.command }}" ]
+        command: [ "/bin/sh", "-c", "ln -svf {{ .Values.volume.mountPath }}/secrets/* {{ .Values.volume.mountPath }}/ && {{ .Values.hbbs.command }}" ]
+        env:
+        - name: KEY_PUB
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-secret
+              key: id_ed25519.pub
+        - name: KEY_PRIV
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-secret
+              key: id_ed25519
+        volumeMounts:
+        - name: data
+          mountPath: {{ .Values.volume.mountPath }}
+        - name: secret-volume
+          mountPath: "{{ .Values.volume.mountPath }}/secrets"
+          readOnly: true
+      - name: hbbr
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: [ "/bin/sh", "-c", "ln -svf {{ .Values.volume.mountPath }}/secrets/* {{ .Values.volume.mountPath }}/ && {{ .Values.hbbr.command }}" ]
+        env:
+        - name: KEY_PUB
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-secret
+              key: id_ed25519.pub
+        - name: KEY_PRIV
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-secret
+              key: id_ed25519
+        volumeMounts:
+        - name: data
+          mountPath: {{ .Values.volume.mountPath }}
+        - name: secret-volume
+          mountPath: "{{ .Values.volume.mountPath }}/secrets"
+          readOnly: true
