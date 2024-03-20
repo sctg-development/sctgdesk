@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-api-config
+data:
+  config.yml: |
+    dbtype: 'sqlite3'
+    authkey: {{ .Values.api.authkey }}
+    cryptkey: {{ .Values.api.cryptkey }}
