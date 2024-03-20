@@ -1,6 +1,6 @@
 apiVersion: v2
-name: SctgDesk-RendezVous
-description: A Helm chart for Kubernetes
+name: sctgdesk
+description: A Helm chart for deploying the backend of the SCTGDesk application
 type: application
 version: 1.0.0
 appVersion: 1.0.0
