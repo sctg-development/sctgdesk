@@ -1,5 +1,5 @@
 {{- if .Values.gateway.enabled }}
-{{- $ports := list 21115 21116 21117 21118 -}}
+{{- $ports := list 21115 21116 21117 21118 21119 -}}
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata: 
