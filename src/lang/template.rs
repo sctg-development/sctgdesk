@@ -590,5 +590,16 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("outgoing_only_desk_tip", ""),
         ("preset_password_warning", ""),
         ("Security Alert", ""),
+        ("My address book", ""),
+        ("Personal", ""),
+        ("Owner", ""),
+        ("Set shared password", ""),
+        ("Exist in", ""),
+        ("Read-only", ""),
+        ("Read/Write", ""),
+        ("Full Control", ""),
+        ("share_warning_tip", ""),
+        ("Everyone", ""),
+        ("ab_web_console_tip", ""),
     ].iter().cloned().collect();
 }

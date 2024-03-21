@@ -588,5 +588,18 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Please select the session you want to connect to", "Wybierz sesję, do której chcesz się podłączyć"),
         ("powered_by_me", ""),
         ("outgoing_only_desk_tip", ""),
+        ("preset_password_warning", ""),
+        ("Security Alert", ""),
+        ("My address book", ""),
+        ("Personal", ""),
+        ("Owner", ""),
+        ("Set shared password", ""),
+        ("Exist in", ""),
+        ("Read-only", ""),
+        ("Read/Write", ""),
+        ("Full Control", ""),
+        ("share_warning_tip", ""),
+        ("Everyone", ""),
+        ("ab_web_console_tip", ""),
     ].iter().cloned().collect();
 }

@@ -588,5 +588,18 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Please select the session you want to connect to", "Vyberte reláciu, ku ktorej sa chcete pripojiť"),
         ("powered_by_me", "Poháňané aplikáciou RustDesk"),
         ("outgoing_only_desk_tip", "Toto je prispôsobené vydanie.\nMôžete sa pripojiť k iným zariadeniam, ale iné zariadenia sa k vášmu zariadeniu pripojiť nemôžu."),
+        ("preset_password_warning", ""),
+        ("Security Alert", ""),
+        ("My address book", ""),
+        ("Personal", ""),
+        ("Owner", ""),
+        ("Set shared password", ""),
+        ("Exist in", ""),
+        ("Read-only", ""),
+        ("Read/Write", ""),
+        ("Full Control", ""),
+        ("share_warning_tip", ""),
+        ("Everyone", ""),
+        ("ab_web_console_tip", ""),
     ].iter().cloned().collect();
 }
