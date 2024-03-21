@@ -343,7 +343,18 @@ jobs:
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       - name: Checkout source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      # Workaround customisation
+      - name: Patch our servers and our keys
+        shell: bash
+        run: |
+          export RS_PUB_KEY=${{ secrets.RS_PUB_KEY }}
+          export RENDEZVOUS_SERVER=${{ secrets.RENDEZVOUS_SERVER }}
+          export API_SERVER=${{ secrets.API_SERVER }}
+          sed -i '' "s/rs-ny.rustdesk.com/${RENDEZVOUS_SERVER}/g" libs/hbb_common/src/config.rs
+          sed -i '' "s/OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=/${RS_PUB_KEY}/g" libs/hbb_common/src/config.rs
+          sed -i '' "s/https:\/\/admin\.rustdesk\.com/https:\/\/${API_SERVER}/g" libs/hbb_common/src/config.rs
 
       - name: Install flutter rust bridge deps
         shell: bash
@@ -410,10 +421,11 @@ jobs:
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       - name: Checkout source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # Workaround customisation
       - name: Patch our servers and our keys
+        shell: bash
         run: |
           export RS_PUB_KEY=${{ secrets.RS_PUB_KEY }}
           export RENDEZVOUS_SERVER=${{ secrets.RENDEZVOUS_SERVER }}
@@ -582,7 +594,19 @@ jobs:
         run: |
           brew install nasm
       - name: Checkout source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      # Workaround customisation
+      - name: Patch our servers and our keys
+        shell: bash
+        run: |
+          export RS_PUB_KEY=${{ secrets.RS_PUB_KEY }}
+          export RENDEZVOUS_SERVER=${{ secrets.RENDEZVOUS_SERVER }}
+          export API_SERVER=${{ secrets.API_SERVER }}
+          sed -i '' "s/rs-ny.rustdesk.com/${RENDEZVOUS_SERVER}/g" libs/hbb_common/src/config.rs
+          sed -i '' "s/OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=/${RS_PUB_KEY}/g" libs/hbb_common/src/config.rs
+          sed -i '' "s/https:\/\/admin\.rustdesk\.com/https:\/\/${API_SERVER}/g" libs/hbb_common/src/config.rs
+
       - name: Install flutter
         uses: subosito/flutter-action@v2
         with:
@@ -905,7 +929,18 @@ jobs:
           sudo apt-get install -y nasm qemu-user-static
 
       - name: Checkout source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+      
+      # Workaround customisation
+      - name: Patch our servers and our keys
+        shell: bash
+        run: |
+          export RS_PUB_KEY=${{ secrets.RS_PUB_KEY }}
+          export RENDEZVOUS_SERVER=${{ secrets.RENDEZVOUS_SERVER }}
+          export API_SERVER=${{ secrets.API_SERVER }}
+          sed -i '' "s/rs-ny.rustdesk.com/${RENDEZVOUS_SERVER}/g" libs/hbb_common/src/config.rs
+          sed -i '' "s/OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=/${RS_PUB_KEY}/g" libs/hbb_common/src/config.rs
+          sed -i '' "s/https:\/\/admin\.rustdesk\.com/https:\/\/${API_SERVER}/g" libs/hbb_common/src/config.rs
 
       - name: Set Swap Space
         uses: pierotofy/set-swap-space@master
@@ -1114,7 +1149,18 @@ jobs:
       #    sudo apt-get install qemu-user-static -y
 
       - name: Checkout source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      # Workaround customisation
+      - name: Patch our servers and our keys
+        shell: bash
+        run: |
+          export RS_PUB_KEY=${{ secrets.RS_PUB_KEY }}
+          export RENDEZVOUS_SERVER=${{ secrets.RENDEZVOUS_SERVER }}
+          export API_SERVER=${{ secrets.API_SERVER }}
+          sed -i '' "s/rs-ny.rustdesk.com/${RENDEZVOUS_SERVER}/g" libs/hbb_common/src/config.rs
+          sed -i '' "s/OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=/${RS_PUB_KEY}/g" libs/hbb_common/src/config.rs
+          sed -i '' "s/https:\/\/admin\.rustdesk\.com/https:\/\/${API_SERVER}/g" libs/hbb_common/src/config.rs
 
       #- name: Set Swap Space
       #  uses: pierotofy/set-swap-space@master
@@ -1485,7 +1531,7 @@ jobs:
           # - { target: arm-unknown-linux-musleabihf, os: ubuntu-20.04, use-cross: true }
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Restore bridge files
         uses: actions/download-artifact@master
