@@ -49,7 +49,7 @@ env:
   SIGN_BASE_URL: "${{ secrets.SIGN_BASE_URL }}"
   # build configuration
   BUILD_ANDROID: "false"
-  BUILD_IOS: "false"
+  BUILD_IOS: "true"
   BUILD_WINDOWS_SCITER: "false"
 
 jobs:
@@ -90,13 +90,14 @@ jobs:
       # Workaround customisation
       - name: Patch our servers and our keys
         run: |
-          export RS_PUB_KEY=${{ secrets.RS_PUB_KEY }}
-          export RENDEZVOUS_SERVER=${{ secrets.RENDEZVOUS_SERVER }}
-          export API_SERVER=${{ secrets.API_SERVER }}
-          sed -i '' "s/rs-ny.rustdesk.com/${RENDEZVOUS_SERVER}/g" libs/hbb_common/src/config.rs
-          sed -i '' "s/OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=/${RS_PUB_KEY}/g" libs/hbb_common/src/config.rs
-          sed -i '' "s/https:\/\/admin\.rustdesk\.com/https:\/\/${API_SERVER}/g" libs/hbb_common/src/config.rs
-
+          $env:RS_PUB_KEY="${{ secrets.RS_PUB_KEY }}"
+          $env:RENDEZVOUS_SERVER="${{ secrets.RENDEZVOUS_SERVER }}"
+          $env:API_SERVER="${{ secrets.API_SERVER }}"
+          (Get-Content libs/hbb_common/src/config.rs) -replace 'rs-ny.rustdesk.com', $env:RENDEZVOUS_SERVER | Set-Content libs/hbb_common/src/config.rs
+          (Get-Content libs/hbb_common/src/config.rs) -replace 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', $env:RS_PUB_KEY | Set-Content libs/hbb_common/src/config.rs
+          (Get-Content libs/hbb_common/src/config.rs) -replace 'https://admin.rustdesk.com', "https://${env:API_SERVER}" | Set-Content libs/hbb_common/src/config.rs
+        shell: powershell
+      
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v1
         with:
@@ -410,6 +411,16 @@ jobs:
 
       - name: Checkout source code
         uses: actions/checkout@v3
+
+      # Workaround customisation
+      - name: Patch our servers and our keys
+        run: |
+          export RS_PUB_KEY=${{ secrets.RS_PUB_KEY }}
+          export RENDEZVOUS_SERVER=${{ secrets.RENDEZVOUS_SERVER }}
+          export API_SERVER=${{ secrets.API_SERVER }}
+          sed -i '' "s/rs-ny.rustdesk.com/${RENDEZVOUS_SERVER}/g" libs/hbb_common/src/config.rs
+          sed -i '' "s/OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=/${RS_PUB_KEY}/g" libs/hbb_common/src/config.rs
+          sed -i '' "s/https:\/\/admin\.rustdesk\.com/https:\/\/${API_SERVER}/g" libs/hbb_common/src/config.rs
 
       - name: Import the codesign cert
         if: env.MACOS_P12_BASE64 != null
@@ -1482,6 +1493,16 @@ jobs:
           name: bridge-artifact
           path: ./
 
+      # Workaround customisation
+      - name: Patch our servers and our keys
+        run: |
+          export RS_PUB_KEY=${{ secrets.RS_PUB_KEY }}
+          export RENDEZVOUS_SERVER=${{ secrets.RENDEZVOUS_SERVER }}
+          export API_SERVER=${{ secrets.API_SERVER }}
+          sed -i '' "s/rs-ny.rustdesk.com/${RENDEZVOUS_SERVER}/g" libs/hbb_common/src/config.rs
+          sed -i '' "s/OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=/${RS_PUB_KEY}/g" libs/hbb_common/src/config.rs
+          sed -i '' "s/https:\/\/admin\.rustdesk\.com/https:\/\/${API_SERVER}/g" libs/hbb_common/src/config.rs
+
       - name: Prepare env
         run: |
           sudo apt-get update -y
@@ -1758,6 +1779,16 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
+
+      # Workaround customisation
+      - name: Patch our servers and our keys
+        run: |
+          export RS_PUB_KEY=${{ secrets.RS_PUB_KEY }}
+          export RENDEZVOUS_SERVER=${{ secrets.RENDEZVOUS_SERVER }}
+          export API_SERVER=${{ secrets.API_SERVER }}
+          sed -i '' "s/rs-ny.rustdesk.com/${RENDEZVOUS_SERVER}/g" libs/hbb_common/src/config.rs
+          sed -i '' "s/OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=/${RS_PUB_KEY}/g" libs/hbb_common/src/config.rs
+          sed -i '' "s/https:\/\/admin\.rustdesk\.com/https:\/\/${API_SERVER}/g" libs/hbb_common/src/config.rs
 
       - name: Restore bridge files
         uses: actions/download-artifact@master
