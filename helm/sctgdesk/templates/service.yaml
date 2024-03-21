@@ -13,6 +13,10 @@ spec:
   - name: port-21116
     port: 21116
     targetPort: 21116
+  - name: port-udp-21116
+    port: 21116
+    protocol: UDP
+    targetPort: 21116
   - name: port-21117
     port: 21117
     targetPort: 21117
