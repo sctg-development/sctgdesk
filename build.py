@@ -412,14 +412,14 @@ def build_deb_from_folder(version, binary_folder):
     os.chdir("..")
 
 def replace_in_file(file_path, old_string, new_string):
-    with open(file_path, 'r') as file:
+    with open(file_path, 'r', encoding='utf-8') as file:
         file_data = file.read()
 
     # Remplacer la chaîne
     file_data = file_data.replace(old_string, new_string)
 
     # Écrire le résultat dans le fichier
-    with open(file_path, 'w') as file:
+    with open(file_path, 'w', encoding='utf-8') as file:
         file.write(file_data)
 
 def replace_in_all_dart_files(old_string, new_string):

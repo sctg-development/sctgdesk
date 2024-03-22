@@ -73,7 +73,7 @@ jobs:
       fail-fast: false
       matrix:
         job:
-          # - { target: i686-pc-windows-msvc        , os: windows-2019                  }
+          - { target: i686-pc-windows-msvc        , os: windows-2019                  }
           # - { target: x86_64-pc-windows-gnu       , os: windows-2019                  }
           - { target: x86_64-pc-windows-msvc, os: windows-2019, arch: x86_64 }
           # - { target: aarch64-pc-windows-msvc, os: windows-2019, arch: aarch64 }
@@ -524,10 +524,10 @@ jobs:
       - name: Build rustdesk
         run: |
           # --hwcodec not supported on macos yet
+          export MACOS_CODESIGN_IDENTITY="${{ secrets.MACOS_CODESIGN_IDENTITY }}"
+          ./build.py --flutter ${{ matrix.job.extra-build-args }}
           ls -l || true
           ls -l  ./flutter/build/macos/Build/Products/Release/ || true
-          export MACOS_CODESIGN_IDENTITY=${{ secrets.MACOS_CODESIGN_IDENTITY }}
-          ./build.py --flutter ${{ matrix.job.extra-build-args }}
 
       - name: Codesign app and create signed dmg
         if: env.MACOS_P12_BASE64 != null && env.UPLOAD_ARTIFACT == 'true'
