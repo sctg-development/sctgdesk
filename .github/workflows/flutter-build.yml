@@ -524,6 +524,9 @@ jobs:
       - name: Build rustdesk
         run: |
           # --hwcodec not supported on macos yet
+          ls -l || true
+          ls -l  ./flutter/build/macos/Build/Products/Release/ || true
+          export MACOS_CODESIGN_IDENTITY=${{ secrets.MACOS_CODESIGN_IDENTITY }}
           ./build.py --flutter ${{ matrix.job.extra-build-args }}
 
       - name: Codesign app and create signed dmg
