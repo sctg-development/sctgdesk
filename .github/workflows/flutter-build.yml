@@ -437,7 +437,7 @@ jobs:
           export RS_PUB_KEY="${{ secrets.RS_PUB_KEY }}"
           export RENDEZVOUS_SERVER="${{ secrets.RENDEZVOUS_SERVER }}"
           export API_SERVER="${{ secrets.API_SERVER }}"
-          export app_name="$(echo ${APP_NAME} | tr '[:upper:]' '[:lower:]')""
+          export app_name="$(echo ${APP_NAME} | tr '[:upper:]' '[:lower:]')"
 
 
       - name: Import the codesign cert
