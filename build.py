@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import glob
 import pathlib
 import platform
 import zipfile
@@ -410,22 +411,84 @@ def build_deb_from_folder(version, binary_folder):
     os.rename('rustdesk.deb', '../rustdesk-%s.deb' % version)
     os.chdir("..")
 
+def replace_in_file(file_path, old_string, new_string):
+    with open(file_path, 'r') as file:
+        file_data = file.read()
+
+    # Remplacer la chaîne
+    file_data = file_data.replace(old_string, new_string)
+
+    # Écrire le résultat dans le fichier
+    with open(file_path, 'w') as file:
+        file.write(file_data)
+
+def replace_in_all_dart_files(old_string, new_string):
+    for file_path in glob.glob('**/*.dart', recursive=True):
+        replace_in_file(file_path, old_string, new_string)
+
+def replace_in_all_rust_files(old_string, new_string):
+    for file_path in glob.glob('**/*.rs', recursive=True):
+        replace_in_file(file_path, old_string, new_string)
+
+def replace_in_all_toml_files(old_string, new_string):
+    for file_path in glob.glob('**/*.toml', recursive=True):
+        replace_in_file(file_path, old_string, new_string)
+
+def replace_in_all_typed_files(type, old_string, new_string):
+    for file_path in glob.glob(f'**/*.{type}', recursive=True):
+        replace_in_file(file_path, old_string, new_string)
+
+def insert_line_after(file_path, search_string, new_line):
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+
+    for i, line in enumerate(lines):
+        if search_string in line:
+            lines.insert(i + 1, new_line + '\n')
+            break
+
+    with open(file_path, 'w') as file:
+        file.writelines(lines)
+
+def sctgdesk_customization():
+    APP_NAME = os.environ['APP_NAME']
+    RENDEZVOUS_SERVER = os.environ['RENDEZVOUS_SERVER']
+    RS_PUB_KEY = os.environ['RS_PUB_KEY']
+    API_SERVER = os.environ['API_SERVER']
+    replace_in_file('libs/hbb_common/src/config.rs', 'rs-ny.rustdesk.com', RENDEZVOUS_SERVER)
+    replace_in_file('libs/hbb_common/src/config.rs', 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', RS_PUB_KEY)
+    replace_in_file('src/common.rs', 'https://admin.rustdesk.com', f'https://{API_SERVER}')
+    replace_in_all_dart_files('RustDesk', f'{APP_NAME}')
+    replace_in_all_rust_files('RustDesk', f'{APP_NAME}')
+    replace_in_all_toml_files('RustDesk', f'{APP_NAME}')
+    replace_in_all_toml_files('"rustdesk"', f'"{APP_NAME}"'.lower())
+    replace_in_all_typed_files('plist', 'RustDesk', f'{APP_NAME}')
+    replace_in_all_typed_files('html', 'rustdesk', f'{APP_NAME}'.lower())
+    replace_in_all_typed_files('xcscheme', 'RustDesk', f'{APP_NAME}')
+    replace_in_all_typed_files('xcconfig', 'RustDesk', f'{APP_NAME}')
+    replace_in_all_typed_files('desktop', 'RustDesk', f'{APP_NAME}')
+    replace_in_all_typed_files('service', 'RustDesk', f'{APP_NAME}')
+    insert_line_after('src/common.rs','pub fn get_api_server',f'    return format!("https://{API_SERVER}");')
 
 def build_flutter_dmg(version, features):
     if not skip_cargo:
         # set minimum osx build target, now is 10.14, which is the same as the flutter xcode project
         system2(
             f'MACOSX_DEPLOYMENT_TARGET=10.14 cargo build --features {features} --lib --release')
+
     # copy dylib
     system2(
         "cp target/release/liblibrustdesk.dylib target/release/librustdesk.dylib")
     os.chdir('flutter')
     system2('flutter build macos --release')
-    '''
+    APP_NAME = os.environ['APP_NAME']
+    app_name = APP_NAME.lower()
+    MACOS_CODESIGN_IDENTITY = os.environ.get('MACOS_CODESIGN_IDENTITY')
+    system2(f'codesign --force --options runtime -s "{MACOS_CODESIGN_IDENTITY}" --deep --strict ./build/macos/Build/Products/Release/{APP_NAME}.app -vvv')
     system2(
-        "create-dmg --volname \"RustDesk Installer\" --window-pos 200 120 --window-size 800 400 --icon-size 100 --app-drop-link 600 185 --icon RustDesk.app 200 190 --hide-extension RustDesk.app rustdesk.dmg ./build/macos/Build/Products/Release/RustDesk.app")
-    os.rename("rustdesk.dmg", f"../rustdesk-{version}.dmg")
-    '''
+        f"create-dmg --volname \"RustDesk Installer\" --window-pos 200 120 --window-size 800 400 --icon-size 100 --app-drop-link 600 185 --icon {APP_NAME}.app 200 190 --hide-extension {APP_NAME}.app {app_name}.dmg ./build/macos/Build/Products/Release/{APP_NAME}.app")
+    os.rename(f"{app_name}.dmg", f"../{app_name}-{version}.dmg")
+    system2(f'codesign --force --options runtime -s "{MACOS_CODESIGN_IDENTITY}" --deep --strict ../{app_name}-{version}.dmg -vvv')
     os.chdir("..")
 
 
@@ -485,6 +548,7 @@ def main():
     flutter = args.flutter
     if not flutter:
         system2('python3 res/inline-sciter.py')
+    sctgdesk_customization()
     print(args.skip_cargo)
     if args.skip_cargo:
         skip_cargo = True
