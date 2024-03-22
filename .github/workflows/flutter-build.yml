@@ -40,6 +40,7 @@ env:
   NDK_VERSION: "r26b"
   #signing keys env variable checks
   ANDROID_SIGNING_KEY: '${{ secrets.ANDROID_SIGNING_KEY }}'
+  APP_NAME: '${{ secrets.APP_NAME }}'
   MACOS_P12_BASE64: '${{ secrets.MACOS_P12_BASE64 }}'
   # To make a custom build with your own servers set the below secret values
   RS_PUB_KEY: '${{ secrets.RS_PUB_KEY }}'
@@ -148,7 +149,12 @@ jobs:
         shell: bash
 
       - name: Build rustdesk
-        run: python3 .\build.py --portable --hwcodec --flutter --gpucodec --skip-portable-pack
+        run: |
+          set RENDEZVOUS_SERVER=${{ secrets.RENDEZVOUS_SERVER }}
+          set RS_PUB_KEY=${{ secrets.RS_PUB_KEY }}
+          set API_SERVER=${{ secrets.API_SERVER }}
+          python3 .\build.py --portable --hwcodec --flutter --gpucodec --skip-portable-pack
+        shell: cmd
 
       - name: find Runner.res
         # Windows: find Runner.res (compiled from ./flutter/windows/runner/Runner.rc), copy to ./Runner.res
@@ -374,19 +380,20 @@ jobs:
           # Patch create-dmg to give more attempts to unmount image
           CREATE_DMG="$(command -v create-dmg)"
           CREATE_DMG="$(readlink -f "$CREATE_DMG")"
+          export app_name=$(echo ${{ env.APP_NAME }} | tr '[:upper:]' '[:lower:]')
           sed -i -e 's/MAXIMUM_UNMOUNTING_ATTEMPTS=3/MAXIMUM_UNMOUNTING_ATTEMPTS=7/' "$CREATE_DMG"
           # start sign the rustdesk.app and dmg
-          rm rustdesk-${{ env.VERSION }}.dmg || true
-          codesign --force --options runtime -s ${{ secrets.MACOS_CODESIGN_IDENTITY }} --deep --strict ./flutter/build/macos/Build/Products/Release/RustDesk.app -vvv
-          create-dmg --icon "RustDesk.app" 200 190 --hide-extension "RustDesk.app" --window-size 800 400 --app-drop-link 600 185 rustdesk-${{ env.VERSION }}.dmg ./flutter/build/macos/Build/Products/Release/RustDesk.app
+          rm ${{ env.app_name }}-${{ env.VERSION }}.dmg || true
+          codesign --force --options runtime -s ${{ secrets.MACOS_CODESIGN_IDENTITY }} --deep --strict ./flutter/build/macos/Build/Products/Release/${{ env.APP_NAME }}.app -vvv
+          create-dmg --icon "${{ env.APP_NAME }}.app" 200 190 --hide-extension "${{ env.APP_NAME }}.app" --window-size 800 400 --app-drop-link 600 185 ${{ env.app_name }}-${{ env.VERSION }}.dmg ./flutter/build/macos/Build/Products/Release/${{ env.APP_NAME }}.app
           codesign --force --options runtime -s ${{ secrets.MACOS_CODESIGN_IDENTITY }} --deep --strict rustdesk-${{ env.VERSION }}.dmg -vvv
           # notarize the rustdesk-${{ env.VERSION }}.dmg
-          rcodesign notary-submit --api-key-path ~/.p12/api-key.json  --staple rustdesk-${{ env.VERSION }}.dmg
+          rcodesign notary-submit --api-key-path ~/.p12/api-key.json  --staple ${{ env.app_name }}-${{ env.VERSION }}.dmg
 
       - name: Rename rustdesk
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
-          for name in rustdesk*??.dmg; do
+          for name in ${{ env.app_name }}*??.dmg; do
               mv "$name" "${name%%.dmg}-aarch64.dmg"
           done
 
@@ -397,7 +404,7 @@ jobs:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
           files: |
-            rustdesk*-aarch64.dmg
+            ${{ env.app_name }}*-aarch64.dmg
 
   build-for-macOS:
     name: ${{ matrix.job.target }} (${{ matrix.job.os }}) [${{ matrix.job.extra-build-args }}]
