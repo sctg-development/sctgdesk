@@ -526,7 +526,7 @@ jobs:
           # --hwcodec not supported on macos yet
           export MACOS_CODESIGN_IDENTITY="${{ secrets.MACOS_CODESIGN_IDENTITY }}"
           export RS_PUB_KEY="${{ secrets.RS_PUB_KEY }}"
-          export RENDEZVOUS_SERVER="${{ secrets.RENDEZVOUS_SERVER }}""
+          export RENDEZVOUS_SERVER="${{ secrets.RENDEZVOUS_SERVER }}"
           export API_SERVER="${{ secrets.API_SERVER }}"
           export APP_NAME="${{ secrets.API_NAME }}"
           export app_name=$(echo "${APP_NAME}" | tr '[:upper:]' '[:lower:]')
