@@ -49,6 +49,8 @@ spec:
           value: {{ .Values.loglevel }}
         - name: RELAY
           value: {{ .Values.ingress.host }}:21117
+        - name: ENCRYPTED_ONLY
+          value: {{ .Values.encryptedOnly | quote}}
         ports:
         - containerPort: 21115
         - containerPort: 21116
