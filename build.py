@@ -509,8 +509,8 @@ def build_ios_ipa(version, features):
         '''
         with open('ExportOptions.plist', 'w') as f:
             f.write(xml_content)
-        system2('xcrun xcodebuild archive -scheme Runner -workspace ios/Runner.xcworkspace -allowProvisioningUpdates -configuration Release -archivePath ./build/ios/iphoneos/Runner.xcarchive')
-        system2('xcrun xcodebuild -exportArchive -archivePath ./build/ios/iphoneos/Runner.xcarchive -allowProvisioningUpdates -exportOptionsPlist ../ExportOptions.plist -exportPath ./build/ios/iphoneos/')
+        system2('xcrun xcodebuild archive -scheme Runner -workspace ios/Runner.xcworkspace -configuration Release -archivePath ./build/ios/iphoneos/Runner.xcarchive')
+        system2('xcrun xcodebuild -exportArchive -archivePath ./build/ios/iphoneos/Runner.xcarchive -exportOptionsPlist ../ExportOptions.plist -exportPath ./build/ios/iphoneos/')
     os.chdir('..')
 
 def build_flutter_dmg(version, features):
