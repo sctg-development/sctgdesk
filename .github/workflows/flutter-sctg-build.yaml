@@ -227,6 +227,7 @@ jobs:
         run: |
           $p12_base64 = "${{ secrets.MACOS_P12_BASE64 }}"
           $p12_password = "${{ secrets.MACOS_P12_PASSWORD }}"
+          $p12_bytes = [System.Convert]::FromBase64String($p12_base64)
           $collection = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2Collection
           $collection.Import($p12_bytes, $p12_password, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::PersistKeySet)
           $store = New-Object System.Security.Cryptography.X509Certificates.X509Store -ArgumentList "My", "CurrentUser"
@@ -1067,7 +1068,7 @@ jobs:
             pushd ~/rpmbuild/RPMS/${{ matrix.job.arch }}
             mkdir -p /opt/artifacts/rpm
             for name in rustdesk*??.rpm; do
-                mv "$name" "/opt/artifacts/rpm/${name%%.rpm}-suse.rpm"
+                mv -v "$name" "/opt/artifacts/rpm/${name%%.rpm}-suse.rpm"
             done
 
       - name: Rename rustdesk
@@ -1075,7 +1076,7 @@ jobs:
         run: |
           for name in rustdesk*??.deb; do
               # use cp to duplicate deb files to fit other packages.
-              cp "$name" "${APP_NAME_LOW}-${{ matrix.job.arch }}.deb"
+              cp -v "$name" "${APP_NAME_LOW}-${{ matrix.job.arch }}.deb"
           done
 
       # - name: Publish debian package
