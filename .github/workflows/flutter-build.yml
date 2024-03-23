@@ -227,7 +227,7 @@ jobs:
         run: |
           curl -o mc.exe https://dl.min.io/client/mc/release/windows-amd64/mc.exe
           .\mc.exe alias set s3release https://${{ secrets.AWS_S3_ENDPOINT }} "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-          .\mc.exe cp './SignOutput/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-*.exe' s3release/${{ secrets.AWS_S3_BUCKET }}/'${{ env.APP_NAME_LOW }}-releases/'
+          .\mc.exe cp ./SignOutput/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-*.exe s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/
         shell: powershell
 
   # The fallback for the flutter version, we use Sciter for 32bit Windows.
