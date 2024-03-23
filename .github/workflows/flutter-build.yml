@@ -430,16 +430,6 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      # Workaround customisation
-      - name: Patch our servers and our keys
-        shell: bash
-        run: |
-          export RS_PUB_KEY="${{ secrets.RS_PUB_KEY }}"
-          export RENDEZVOUS_SERVER="${{ secrets.RENDEZVOUS_SERVER }}"
-          export API_SERVER="${{ secrets.API_SERVER }}"
-          export app_name="$(echo ${APP_NAME} | tr '[:upper:]' '[:lower:]')"
-
-
       - name: Import the codesign cert
         if: env.MACOS_P12_BASE64 != null
         uses: apple-actions/import-codesign-certs@v2
@@ -528,8 +518,8 @@ jobs:
           export RS_PUB_KEY="${{ secrets.RS_PUB_KEY }}"
           export RENDEZVOUS_SERVER="${{ secrets.RENDEZVOUS_SERVER }}"
           export API_SERVER="${{ secrets.API_SERVER }}"
-          export APP_NAME="${{ secrets.API_NAME }}"
-          export app_name="${{ secrets.API_NAME_LOW }}"
+          export APP_NAME="${{ secrets.APP_NAME }}"
+          export app_name=$(echo ${{ secrets.APP_NAME }} | tr '[:upper:]' '[:lower:]')
           ./build.py --flutter ${{ matrix.job.extra-build-args }}
           ls -l || true
           ls -l  ./flutter/build/macos/Build/Products/Release/ || true
