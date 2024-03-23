@@ -41,6 +41,8 @@ env:
   #signing keys env variable checks
   ANDROID_SIGNING_KEY: '${{ secrets.ANDROID_SIGNING_KEY }}'
   APP_NAME: '${{ secrets.APP_NAME }}'
+  APP_NAME_LOW: '${{ secrets.APP_NAME_LOW }}'
+  MACOS_CODESIGN_IDENTITY: "${{ secrets.MACOS_CODESIGN_IDENTITY }}"
   MACOS_P12_BASE64: '${{ secrets.MACOS_P12_BASE64 }}'
   # To make a custom build with your own servers set the below secret values
   RS_PUB_KEY: '${{ secrets.RS_PUB_KEY }}'
@@ -352,17 +354,6 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      # Workaround customisation
-      - name: Patch our servers and our keys
-        shell: bash
-        run: |
-          export RS_PUB_KEY=${{ secrets.RS_PUB_KEY }}
-          export RENDEZVOUS_SERVER=${{ secrets.RENDEZVOUS_SERVER }}
-          export API_SERVER=${{ secrets.API_SERVER }}
-          sed -i '' "s/rs-ny.rustdesk.com/${RENDEZVOUS_SERVER}/g" libs/hbb_common/src/config.rs
-          sed -i '' "s/OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=/${RS_PUB_KEY}/g" libs/hbb_common/src/config.rs
-          sed -i '' "s/https:\/\/admin\.rustdesk\.com/https:\/\/${API_SERVER}/g" libs/hbb_common/src/config.rs
-
       - name: Install flutter rust bridge deps
         shell: bash
         run: |
@@ -381,20 +372,19 @@ jobs:
           # Patch create-dmg to give more attempts to unmount image
           CREATE_DMG="$(command -v create-dmg)"
           CREATE_DMG="$(readlink -f "$CREATE_DMG")"
-          export app_name=$(echo ${{ env.APP_NAME }} | tr '[:upper:]' '[:lower:]')
           sed -i -e 's/MAXIMUM_UNMOUNTING_ATTEMPTS=3/MAXIMUM_UNMOUNTING_ATTEMPTS=7/' "$CREATE_DMG"
           # start sign the rustdesk.app and dmg
-          rm ${{ env.app_name }}-${{ env.VERSION }}.dmg || true
+          rm ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg || true
           codesign --force --options runtime -s ${{ secrets.MACOS_CODESIGN_IDENTITY }} --deep --strict ./flutter/build/macos/Build/Products/Release/${{ env.APP_NAME }}.app -vvv
-          create-dmg --icon "${{ env.APP_NAME }}.app" 200 190 --hide-extension "${{ env.APP_NAME }}.app" --window-size 800 400 --app-drop-link 600 185 ${{ env.app_name }}-${{ env.VERSION }}.dmg ./flutter/build/macos/Build/Products/Release/${{ env.APP_NAME }}.app
+          create-dmg --icon "${{ env.APP_NAME }}.app" 200 190 --hide-extension "${{ env.APP_NAME }}.app" --window-size 800 400 --app-drop-link 600 185 ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg ./flutter/build/macos/Build/Products/Release/${{ env.APP_NAME }}.app
           codesign --force --options runtime -s ${{ secrets.MACOS_CODESIGN_IDENTITY }} --deep --strict rustdesk-${{ env.VERSION }}.dmg -vvv
           # notarize the rustdesk-${{ env.VERSION }}.dmg
-          rcodesign notary-submit --api-key-path ~/.p12/api-key.json  --staple ${{ env.app_name }}-${{ env.VERSION }}.dmg
+          rcodesign notary-submit --api-key-path ~/.p12/api-key.json  --staple ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg
 
       - name: Rename rustdesk
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
-          for name in ${{ env.app_name }}*??.dmg; do
+          for name in ${{ env.APP_NAME_LOW }}*??.dmg; do
               mv "$name" "${name%%.dmg}-aarch64.dmg"
           done
 
@@ -405,7 +395,7 @@ jobs:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
           files: |
-            ${{ env.app_name }}*-aarch64.dmg
+            ${{ env.APP_NAME_LOW }}*-aarch64.dmg
 
   build-for-macOS:
     name: ${{ matrix.job.target }} (${{ matrix.job.os }}) [${{ matrix.job.extra-build-args }}]
@@ -515,12 +505,6 @@ jobs:
       - name: Build rustdesk
         run: |
           # --hwcodec not supported on macos yet
-          export MACOS_CODESIGN_IDENTITY="${{ secrets.MACOS_CODESIGN_IDENTITY }}"
-          export RS_PUB_KEY="${{ secrets.RS_PUB_KEY }}"
-          export RENDEZVOUS_SERVER="${{ secrets.RENDEZVOUS_SERVER }}"
-          export API_SERVER="${{ secrets.API_SERVER }}"
-          export APP_NAME="${{ secrets.APP_NAME }}"
-          export app_name=$(echo ${{ secrets.APP_NAME }} | tr '[:upper:]' '[:lower:]')
           ./build.py --flutter ${{ matrix.job.extra-build-args }}
           ls -l || true
           ls -l  ./flutter/build/macos/Build/Products/Release/ || true
@@ -540,16 +524,16 @@ jobs:
           security unlock-keychain -p ${{ secrets.MACOS_P12_PASSWORD }} rustdesk.keychain
           # start sign the rustdesk.app and dmg
           echo "Deleting old dmg file if exists"
-          rm ${{ env.app_name }}-${{ env.VERSION }}.dmg || true
+          rm ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg || true
           echo "Signing the rustdesk.app"
           codesign --force --options runtime -s "${{ secrets.MACOS_CODESIGN_IDENTITY }}" --deep --strict ./flutter/build/macos/Build/Products/Release/${{ env.APP_NAME }}.app -vvv
           echo "Creating the dmg"
-          create-dmg --icon "${{ env.APP_NAME }}.app" 200 190 --hide-extension "RustDesk.app" --window-size 800 400 --app-drop-link 600 185 ${{ env.app_name }}-${{ env.VERSION }}.dmg ./flutter/build/macos/Build/Products/Release/${{ env.APP_NAME }}.app
+          create-dmg --icon "${{ env.APP_NAME }}.app" 200 190 --hide-extension "${{ env.APP_NAME }}.app" --window-size 800 400 --app-drop-link 600 185 ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg ./flutter/build/macos/Build/Products/Release/${{ env.APP_NAME }}.app
           echo "Signing the dmg"
-          codesign --force --options runtime -s "${{ secrets.MACOS_CODESIGN_IDENTITY }}" --deep --strict ${{ env.app_name }}-${{ env.VERSION }}.dmg -vvv
-          # notarize the ${{ env.app_name }}-${{ env.VERSION }}.dmg
+          codesign --force --options runtime -s "${{ secrets.MACOS_CODESIGN_IDENTITY }}" --deep --strict ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg -vvv
+          # notarize the ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg
           echo "Notarizing the dmg"
-          rcodesign notary-submit --api-key-path ${{ github.workspace }}/rustdesk.json  --staple ${{ env.app_name }}-${{ env.VERSION }}.dmg
+          rcodesign notary-submit --api-key-path ${{ github.workspace }}/rustdesk.json  --staple ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg
 
       - name: Rename rustdesk
         if: env.UPLOAD_ARTIFACT == 'true'
@@ -601,17 +585,6 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      # Workaround customisation
-      - name: Patch our servers and our keys
-        shell: bash
-        run: |
-          export RS_PUB_KEY=${{ secrets.RS_PUB_KEY }}
-          export RENDEZVOUS_SERVER=${{ secrets.RENDEZVOUS_SERVER }}
-          export API_SERVER=${{ secrets.API_SERVER }}
-          sed -i '' "s/rs-ny.rustdesk.com/${RENDEZVOUS_SERVER}/g" libs/hbb_common/src/config.rs
-          sed -i '' "s/OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=/${RS_PUB_KEY}/g" libs/hbb_common/src/config.rs
-          sed -i '' "s/https:\/\/admin\.rustdesk\.com/https:\/\/${API_SERVER}/g" libs/hbb_common/src/config.rs
-
       - name: Install flutter
         uses: subosito/flutter-action@v2
         with:
@@ -659,6 +632,8 @@ jobs:
           # flutter build ipa --release --obfuscate --split-debug-info=./split-debug-info --no-codesign
           # for easy debugging
           flutter build ipa --release --no-codesign
+          #### DEBUG
+          ls -lR build/ios || true
 
       # - name: Upload Artifacts
       #   # if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'
@@ -669,7 +644,7 @@ jobs:
 
       - name: Publish ipa package
         # if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
@@ -935,17 +910,6 @@ jobs:
 
       - name: Checkout source code
         uses: actions/checkout@v4
-      
-      # Workaround customisation
-      - name: Patch our servers and our keys
-        shell: bash
-        run: |
-          export RS_PUB_KEY=${{ secrets.RS_PUB_KEY }}
-          export RENDEZVOUS_SERVER=${{ secrets.RENDEZVOUS_SERVER }}
-          export API_SERVER=${{ secrets.API_SERVER }}
-          sed -i '' "s/rs-ny.rustdesk.com/${RENDEZVOUS_SERVER}/g" libs/hbb_common/src/config.rs
-          sed -i '' "s/OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=/${RS_PUB_KEY}/g" libs/hbb_common/src/config.rs
-          sed -i '' "s/https:\/\/admin\.rustdesk\.com/https:\/\/${API_SERVER}/g" libs/hbb_common/src/config.rs
 
       - name: Set Swap Space
         uses: pierotofy/set-swap-space@master
@@ -1155,17 +1119,6 @@ jobs:
 
       - name: Checkout source code
         uses: actions/checkout@v4
-
-      # Workaround customisation
-      - name: Patch our servers and our keys
-        shell: bash
-        run: |
-          export RS_PUB_KEY=${{ secrets.RS_PUB_KEY }}
-          export RENDEZVOUS_SERVER=${{ secrets.RENDEZVOUS_SERVER }}
-          export API_SERVER=${{ secrets.API_SERVER }}
-          sed -i '' "s/rs-ny.rustdesk.com/${RENDEZVOUS_SERVER}/g" libs/hbb_common/src/config.rs
-          sed -i '' "s/OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=/${RS_PUB_KEY}/g" libs/hbb_common/src/config.rs
-          sed -i '' "s/https:\/\/admin\.rustdesk\.com/https:\/\/${API_SERVER}/g" libs/hbb_common/src/config.rs
 
       #- name: Set Swap Space
       #  uses: pierotofy/set-swap-space@master
@@ -1544,16 +1497,6 @@ jobs:
           name: bridge-artifact
           path: ./
 
-      # Workaround customisation
-      - name: Patch our servers and our keys
-        run: |
-          export RS_PUB_KEY=${{ secrets.RS_PUB_KEY }}
-          export RENDEZVOUS_SERVER=${{ secrets.RENDEZVOUS_SERVER }}
-          export API_SERVER=${{ secrets.API_SERVER }}
-          sed -i '' "s/rs-ny.rustdesk.com/${RENDEZVOUS_SERVER}/g" libs/hbb_common/src/config.rs
-          sed -i '' "s/OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=/${RS_PUB_KEY}/g" libs/hbb_common/src/config.rs
-          sed -i '' "s/https:\/\/admin\.rustdesk\.com/https:\/\/${API_SERVER}/g" libs/hbb_common/src/config.rs
-
       - name: Prepare env
         run: |
           sudo apt-get update -y
@@ -1830,16 +1773,6 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
-
-      # Workaround customisation
-      - name: Patch our servers and our keys
-        run: |
-          export RS_PUB_KEY=${{ secrets.RS_PUB_KEY }}
-          export RENDEZVOUS_SERVER=${{ secrets.RENDEZVOUS_SERVER }}
-          export API_SERVER=${{ secrets.API_SERVER }}
-          sed -i '' "s/rs-ny.rustdesk.com/${RENDEZVOUS_SERVER}/g" libs/hbb_common/src/config.rs
-          sed -i '' "s/OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=/${RS_PUB_KEY}/g" libs/hbb_common/src/config.rs
-          sed -i '' "s/https:\/\/admin\.rustdesk\.com/https:\/\/${API_SERVER}/g" libs/hbb_common/src/config.rs
 
       - name: Restore bridge files
         uses: actions/download-artifact@master
