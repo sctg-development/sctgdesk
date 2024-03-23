@@ -8,7 +8,7 @@ on:
 
 jobs:
   run-flutter-monthly-build:
-    uses: ./.github/workflows/flutter-build.yml
+    uses: ./.github/workflows/flutter-sctg-build.yml
     secrets: inherit
     with:
       upload-artifact: true
