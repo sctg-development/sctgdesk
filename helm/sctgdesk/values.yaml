@@ -8,6 +8,7 @@ image:
   pullPolicy: IfNotPresent
 
 hbbs:
+  encrypted: "1"
   command: hbbs
 
 hbbr:

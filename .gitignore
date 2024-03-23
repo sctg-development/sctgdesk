@@ -54,3 +54,4 @@ examples/**/target/
 vcpkg_installed
 .env
 rustdesk.json
+sctgdesk.yaml
