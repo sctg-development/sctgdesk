@@ -153,6 +153,7 @@ jobs:
           set RENDEZVOUS_SERVER=${{ secrets.RENDEZVOUS_SERVER }}
           set RS_PUB_KEY=${{ secrets.RS_PUB_KEY }}
           set API_SERVER=${{ secrets.API_SERVER }}
+          set APP_NAME=${{ secrets.APP_NAME }}
           python3 .\build.py --portable --hwcodec --flutter --gpucodec --skip-portable-pack
         shell: cmd
 
@@ -559,7 +560,7 @@ jobs:
 
       - name: Publish DMG package
         if: env.UPLOAD_ARTIFACT == 'true'
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
