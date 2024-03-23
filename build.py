@@ -154,12 +154,11 @@ def make_parser():
             action='store_true',
             help='Skip packing, only flutter version + Windows supported'
         )
-    if osx:
-        parser.add_argument(
-            '--ios',
-            action='store_true',
-            help='Build ios ipa'
-        )
+    parser.add_argument(
+        '--ios',
+        action='store_true',
+        help='Build ios ipa'
+    )
     parser.add_argument(
         "--package",
         type=str
@@ -418,7 +417,7 @@ def build_deb_from_folder(version, binary_folder):
     os.chdir("..")
 
 def replace_in_file(file_path, old_string, new_string):
-    with open(file_path, 'r', encoding='utf-8') as file:
+    with open(file_path, 'r', encoding='utf-8', errors='replace') as file:
         file_data = file.read()
 
     # Remplacer la chaîne
@@ -475,6 +474,8 @@ def sctgdesk_customization():
     replace_in_all_toml_files('"rustdesk"', f'"{APP_NAME}"'.lower())
     replace_in_all_typed_files('plist', 'RustDesk', f'{APP_NAME}')
     replace_in_all_typed_files('plist', 'com.carriez.rustdesk', f'com.{ORG_NAME}.{APP_NAME}'.lower())
+    replace_in_all_typed_files('plist', 'com.carriez.flutterHbb', f'com.{ORG_NAME}.{APP_NAME}-ios'.lower())
+    replace_in_all_typed_files('pbxproj', 'com.carriez.flutterHbb', f'com.{ORG_NAME}.{APP_NAME}-ios'.lower())
     replace_in_all_typed_files('html', 'rustdesk', f'{APP_NAME}'.lower())
     replace_in_all_typed_files('xcscheme', 'RustDesk', f'{APP_NAME}')
     replace_in_all_typed_files('xcconfig', 'RustDesk', f'{APP_NAME}')
