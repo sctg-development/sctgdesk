@@ -1,16 +1,3 @@
-# needed secrets are
-# ANDROID_ALIAS
-# ANDROID_KEY_PASSWORD
-# ANDROID_KEY_STORE_PASSWORD
-# ANDROID_SIGNING_KEY
-# API_SERVER
-# MACOS_CODESIGN_IDENTITY
-# MACOS_NOTARIZE_JSON
-# MACOS_P12_BASE64
-# MACOS_P12_PASSWORD
-# RENDEZVOUS_SERVER
-# RS_PUB_KEY
-# SIGN_BASE_URL
 name: Build the flutter version of the RustDesk
 
 on:
@@ -40,10 +27,6 @@ env:
   NDK_VERSION: "r26b"
   #signing keys env variable checks
   ANDROID_SIGNING_KEY: '${{ secrets.ANDROID_SIGNING_KEY }}'
-  ORG_NAME: '${{ secrets.ORG_NAME }}'
-  APP_NAME: '${{ secrets.APP_NAME }}'
-  APP_NAME_LOW: '${{ secrets.APP_NAME_LOW }}'
-  MACOS_CODESIGN_IDENTITY: "${{ secrets.MACOS_CODESIGN_IDENTITY }}"
   MACOS_P12_BASE64: '${{ secrets.MACOS_P12_BASE64 }}'
   # To make a custom build with your own servers set the below secret values
   RS_PUB_KEY: '${{ secrets.RS_PUB_KEY }}'
@@ -51,10 +34,6 @@ env:
   API_SERVER: '${{ secrets.API_SERVER }}'
   UPLOAD_ARTIFACT: "${{ inputs.upload-artifact }}"
   SIGN_BASE_URL: "${{ secrets.SIGN_BASE_URL }}"
-  # build configuration
-  BUILD_ANDROID: "false"
-  BUILD_IOS: "true"
-  BUILD_WINDOWS_SCITER: "false"
 
 jobs:
   build-RustDeskTempTopMostWindow:
@@ -76,7 +55,7 @@ jobs:
       fail-fast: false
       matrix:
         job:
-          - { target: i686-pc-windows-msvc        , os: windows-2019 , arch: i686                 }
+          # - { target: i686-pc-windows-msvc        , os: windows-2019                  }
           # - { target: x86_64-pc-windows-gnu       , os: windows-2019                  }
           - { target: x86_64-pc-windows-msvc, os: windows-2019, arch: x86_64 }
           # - { target: aarch64-pc-windows-msvc, os: windows-2019, arch: aarch64 }
@@ -91,17 +70,6 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      # Workaround customisation
-      - name: Patch our servers and our keys
-        run: |
-          $env:RS_PUB_KEY="${{ secrets.RS_PUB_KEY }}"
-          $env:RENDEZVOUS_SERVER="${{ secrets.RENDEZVOUS_SERVER }}"
-          $env:API_SERVER="${{ secrets.API_SERVER }}"
-          (Get-Content libs/hbb_common/src/config.rs) -replace 'rs-ny.rustdesk.com', $env:RENDEZVOUS_SERVER | Set-Content libs/hbb_common/src/config.rs
-          (Get-Content libs/hbb_common/src/config.rs) -replace 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', $env:RS_PUB_KEY | Set-Content libs/hbb_common/src/config.rs
-          (Get-Content libs/hbb_common/src/config.rs) -replace 'https://admin.rustdesk.com', "https://${env:API_SERVER}" | Set-Content libs/hbb_common/src/config.rs
-        shell: powershell
-      
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v1
         with:
@@ -152,13 +120,7 @@ jobs:
         shell: bash
 
       - name: Build rustdesk
-        run: |
-          set RENDEZVOUS_SERVER=${{ secrets.RENDEZVOUS_SERVER }}
-          set RS_PUB_KEY=${{ secrets.RS_PUB_KEY }}
-          set API_SERVER=${{ secrets.API_SERVER }}
-          set APP_NAME=${{ secrets.APP_NAME }}
-          python3 .\build.py --portable --hwcodec --flutter --gpucodec --skip-portable-pack
-        shell: cmd
+        run: python3 .\build.py --portable --hwcodec --flutter --gpucodec --skip-portable-pack
 
       - name: find Runner.res
         # Windows: find Runner.res (compiled from ./flutter/windows/runner/Runner.rc), copy to ./Runner.res
@@ -206,7 +168,6 @@ jobs:
           popd
           mkdir -p ./SignOutput
           mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.exe
-          mv ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.exe ./SignOutput/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.exe
 
       - name: Sign rustdesk self-extracted file
         if: env.UPLOAD_ARTIFACT == 'true' && env.SIGN_BASE_URL != ''
@@ -221,16 +182,8 @@ jobs:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
           files: |
-            ./SignOutput/${{ env.APP_NAME_LOW }}-*.exe
-
-      - name: Download, install mc and copy file to S3
-        run: |
-          curl -o mc.exe https://dl.min.io/client/mc/release/windows-amd64/mc.exe
-          .\mc.exe alias set s3release https://${{ secrets.AWS_S3_ENDPOINT }} "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-          $command = ".\mc.exe cp .\SignOutput\${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.exe s3release\${{ secrets.AWS_S3_BUCKET }}\${{ env.APP_NAME_LOW }}-releases\"
-          Write-Host $command
-          Invoke-Expression $command
-        shell: powershell
+            ./SignOutput/rustdesk-*.exe
+            ./rustdesk-*.tar.gz
 
   # The fallback for the flutter version, we use Sciter for 32bit Windows.
   build-for-windows-sciter:
@@ -247,8 +200,6 @@ jobs:
           - { target: i686-pc-windows-msvc, os: windows-2019, arch: x86 }
           # - { target: aarch64-pc-windows-msvc, os: windows-2019 }
     steps:
-      - name: Check if BUILD_WINDOWS_SCITER is true
-        run: if [[ "${{ env.BUILD_WINDOWS_SCITER }}" != "true" ]]; then exit 1; fi
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@v6
         with:
@@ -350,63 +301,6 @@ jobs:
             ./SignOutput/rustdesk-*.exe
             ./rustdesk-*.tar.gz
 
-  build-for-macOS-arm64:
-    name: build-for-macOS-arm64
-    runs-on: [self-hosted, macOS, ARM64]
-    steps:
-      - name: Export GitHub Actions cache environment variables
-        uses: actions/github-script@v6
-        with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-
-      - name: Checkout source code
-        uses: actions/checkout@v4
-
-      - name: Install flutter rust bridge deps
-        shell: bash
-        run: |
-          cargo install flutter_rust_bridge_codegen --version ${{ env.FLUTTER_RUST_BRIDGE_VERSION }} --features "uuid"
-          pushd flutter && flutter pub get && popd
-          ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart --c-output ./flutter/macos/Runner/bridge_generated.h
-
-      - name: Build rustdesk
-        run: |
-          # --hwcodec not supported on macos yet
-          ./build.py --flutter
-
-      - name: Codesign app and create signed dmg
-        if: env.MACOS_P12_BASE64 != null && env.UPLOAD_ARTIFACT == 'true'
-        run: |
-          # Patch create-dmg to give more attempts to unmount image
-          CREATE_DMG="$(command -v create-dmg)"
-          CREATE_DMG="$(readlink -f "$CREATE_DMG")"
-          sed -i -e 's/MAXIMUM_UNMOUNTING_ATTEMPTS=3/MAXIMUM_UNMOUNTING_ATTEMPTS=7/' "$CREATE_DMG"
-          # start sign the rustdesk.app and dmg
-          rm ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg || true
-          codesign --force --options runtime -s ${{ secrets.MACOS_CODESIGN_IDENTITY }} --deep --strict ./flutter/build/macos/Build/Products/Release/${{ env.APP_NAME }}.app -vvv
-          create-dmg --icon "${{ env.APP_NAME }}.app" 200 190 --hide-extension "${{ env.APP_NAME }}.app" --window-size 800 400 --app-drop-link 600 185 ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg ./flutter/build/macos/Build/Products/Release/${{ env.APP_NAME }}.app
-          codesign --force --options runtime -s ${{ secrets.MACOS_CODESIGN_IDENTITY }} --deep --strict rustdesk-${{ env.VERSION }}.dmg -vvv
-          # notarize the rustdesk-${{ env.VERSION }}.dmg
-          rcodesign notary-submit --api-key-path ~/.p12/api-key.json  --staple ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg
-
-      - name: Rename rustdesk
-        if: env.UPLOAD_ARTIFACT == 'true'
-        run: |
-          for name in ${{ env.APP_NAME_LOW }}*??.dmg; do
-              mv "$name" "${name%%.dmg}-aarch64.dmg"
-          done
-
-      - name: Publish DMG package
-        if: env.UPLOAD_ARTIFACT == 'true'
-        uses: softprops/action-gh-release@v1
-        with:
-          prerelease: true
-          tag_name: ${{ env.TAG_NAME }}
-          files: |
-            ${{ env.APP_NAME_LOW }}*-aarch64.dmg
-
   build-for-macOS:
     name: ${{ matrix.job.target }} (${{ matrix.job.os }}) [${{ matrix.job.extra-build-args }}]
     runs-on: ${{ matrix.job.os }}
@@ -429,16 +323,15 @@ jobs:
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Import the codesign cert
         if: env.MACOS_P12_BASE64 != null
-        uses: apple-actions/import-codesign-certs@v2
+        uses: apple-actions/import-codesign-certs@v1
         with:
           p12-file-base64: ${{ secrets.MACOS_P12_BASE64 }}
           p12-password: ${{ secrets.MACOS_P12_PASSWORD }}
           keychain: rustdesk
-          keychain-password: ${{ secrets.MACOS_P12_PASSWORD }}
 
       - name: Check sign and import sign key
         if: env.MACOS_P12_BASE64 != null
@@ -516,8 +409,6 @@ jobs:
         run: |
           # --hwcodec not supported on macos yet
           ./build.py --flutter ${{ matrix.job.extra-build-args }}
-          ls -l || true
-          ls -l  ./flutter/build/macos/Build/Products/Release/ || true
 
       - name: Codesign app and create signed dmg
         if: env.MACOS_P12_BASE64 != null && env.UPLOAD_ARTIFACT == 'true'
@@ -525,50 +416,33 @@ jobs:
           # Patch create-dmg to give more attempts to unmount image
           CREATE_DMG="$(command -v create-dmg)"
           CREATE_DMG="$(readlink -f "$CREATE_DMG")"
-          sed -i -e 's/MAXIMUM_UNMOUNTING_ATTEMPTS=3/MAXIMUM_UNMOUNTING_ATTEMPTS=9/' "$CREATE_DMG"
-          echo "Patched create-dmg to give more attempts to unmount image"
+          sed -i -e 's/MAXIMUM_UNMOUNTING_ATTEMPTS=3/MAXIMUM_UNMOUNTING_ATTEMPTS=7/' "$CREATE_DMG"
           # Unlock keychain
-          echo "Setting default keychain"
           security default-keychain -s rustdesk.keychain
-          echo "Unlocking keychain"
           security unlock-keychain -p ${{ secrets.MACOS_P12_PASSWORD }} rustdesk.keychain
           # start sign the rustdesk.app and dmg
-          echo "Deleting old dmg file if exists"
-          rm ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg || true
-          echo "Signing the rustdesk.app"
-          codesign --force --options runtime -s "${{ secrets.MACOS_CODESIGN_IDENTITY }}" --deep --strict ./flutter/build/macos/Build/Products/Release/${{ env.APP_NAME }}.app -vvv
-          echo "Creating the dmg"
-          create-dmg --icon "${{ env.APP_NAME }}.app" 200 190 --hide-extension "${{ env.APP_NAME }}.app" --window-size 800 400 --app-drop-link 600 185 ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg ./flutter/build/macos/Build/Products/Release/${{ env.APP_NAME }}.app
-          echo "Signing the dmg"
-          codesign --force --options runtime -s "${{ secrets.MACOS_CODESIGN_IDENTITY }}" --deep --strict ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg -vvv
-          # notarize the ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg
-          echo "Notarizing the dmg"
-          rcodesign notary-submit --api-key-path ${{ github.workspace }}/rustdesk.json  --staple ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg
+          rm rustdesk-${{ env.VERSION }}.dmg || true
+          codesign --force --options runtime -s ${{ secrets.MACOS_CODESIGN_IDENTITY }} --deep --strict ./flutter/build/macos/Build/Products/Release/RustDesk.app -vvv
+          create-dmg --icon "RustDesk.app" 200 190 --hide-extension "RustDesk.app" --window-size 800 400 --app-drop-link 600 185 rustdesk-${{ env.VERSION }}.dmg ./flutter/build/macos/Build/Products/Release/RustDesk.app
+          codesign --force --options runtime -s ${{ secrets.MACOS_CODESIGN_IDENTITY }} --deep --strict rustdesk-${{ env.VERSION }}.dmg -vvv
+          # notarize the rustdesk-${{ env.VERSION }}.dmg
+          rcodesign notary-submit --api-key-path ${{ github.workspace }}/rustdesk.json  --staple rustdesk-${{ env.VERSION }}.dmg
 
       - name: Rename rustdesk
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
-          for name in ${{ env.APP_NAME_LOW }}*??.dmg; do
-              mv -v "$name" "${name%%.dmg}-${{ matrix.job.arch }}.dmg"
+          for name in rustdesk*??.dmg; do
+              mv "$name" "${name%%.dmg}-${{ matrix.job.arch }}.dmg"
           done
 
-      # - name: Publish DMG package
-      #   if: env.UPLOAD_ARTIFACT == 'true'
-      #   uses: softprops/action-gh-release@v2
-      #   with:
-      #     prerelease: true
-      #     tag_name: ${{ env.TAG_NAME }}
-      #     files: |
-      #       ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.dmg
-
-      - name: Download, install mc and copy file to S3
-        run: |
-          curl -o mc https://dl.min.io/client/mc/release/darwin-amd64/mc
-          chmod +x mc
-          ./mc alias set s3release https://${{ secrets.AWS_S3_ENDPOINT }} "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-          echo "Copying ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg to s3"
-          echo "./mc cp ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg"
-          ./mc cp ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.dmg s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg
+      - name: Publish DMG package
+        if: env.UPLOAD_ARTIFACT == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          prerelease: true
+          tag_name: ${{ env.TAG_NAME }}
+          files: |
+            rustdesk*-${{ matrix.job.arch }}.dmg
 
   generate-bridge-linux:
     uses: ./.github/workflows/bridge.yml
@@ -588,9 +462,6 @@ jobs:
               extra-build-features: "",
             }
     steps:
-      - name: Check if BUILD_IOS is true
-        run: if [[ "${{ env.BUILD_IOS }}" != "true" ]]; then exit 1; fi
-        continue-on-error: true
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@v6
         with:
@@ -602,8 +473,7 @@ jobs:
         run: |
           brew install nasm
       - name: Checkout source code
-        uses: actions/checkout@v4
-
+        uses: actions/checkout@v3
       - name: Install flutter
         uses: subosito/flutter-action@v2
         with:
@@ -639,10 +509,18 @@ jobs:
           pushd flutter && flutter pub get && popd
           ~/.cargo/bin/flutter_rust_bridge_codegen --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart --c-output ./flutter/ios/Runner/bridge_generated.h
 
+      - name: Build rustdesk lib
+        run: |
+          rustup target add ${{ matrix.job.target }}
+          cargo build --features flutter --release --target aarch64-apple-ios --lib
+
       - name: Build rustdesk
         shell: bash
         run: |
-          ./build.py --flutter --ios
+          pushd flutter
+          # flutter build ipa --release --obfuscate --split-debug-info=./split-debug-info --no-codesign
+          # for easy debugging
+          flutter build ipa --release --no-codesign
 
       # - name: Upload Artifacts
       #   # if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'
@@ -651,14 +529,14 @@ jobs:
       #     name: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.apk
       #     path: flutter/build/ios/ipa/*.ipa
 
-      - name: Publish ipa package
-        # if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'
-        uses: softprops/action-gh-release@v2
-        with:
-          prerelease: true
-          tag_name: ${{ env.TAG_NAME }}
-          files: |
-            flutter/build/ios/ipa/*.ipa
+      # - name: Publish ipa package
+      #   # if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     prerelease: true
+      #     tag_name: ${{ env.TAG_NAME }}
+      #     files: |
+      #       flutter/build/ios/ipa/*.ipa
 
   build-rustdesk-android:
     needs: [generate-bridge-linux]
@@ -683,8 +561,6 @@ jobs:
               openssl-arch: android-arm
             }
     steps:
-      - name: Check if BUILD_ANDROID is true
-        run: if [[ "${{ env.BUILD_ANDROID }}" != "true" ]]; then exit 1; fi
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@v6
         with:
@@ -918,7 +794,7 @@ jobs:
           sudo apt-get install -y nasm qemu-user-static
 
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Set Swap Space
         uses: pierotofy/set-swap-space@master
@@ -1127,7 +1003,7 @@ jobs:
       #    sudo apt-get install qemu-user-static -y
 
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       #- name: Set Swap Space
       #  uses: pierotofy/set-swap-space@master
@@ -1498,7 +1374,7 @@ jobs:
           # - { target: arm-unknown-linux-musleabihf, os: ubuntu-20.04, use-cross: true }
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Restore bridge files
         uses: actions/download-artifact@master
