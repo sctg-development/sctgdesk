@@ -154,6 +154,12 @@ def make_parser():
             action='store_true',
             help='Skip packing, only flutter version + Windows supported'
         )
+    if osx:
+        parser.add_argument(
+            '--ios',
+            action='store_true',
+            help='Build ios ipa'
+        )
     parser.add_argument(
         "--package",
         type=str
@@ -459,6 +465,7 @@ def sctgdesk_customization():
     RENDEZVOUS_SERVER = os.environ['RENDEZVOUS_SERVER']
     RS_PUB_KEY = os.environ['RS_PUB_KEY']
     API_SERVER = os.environ['API_SERVER']
+    ORG_NAME = os.environ['ORG_NAME']
     replace_in_file('libs/hbb_common/src/config.rs', 'rs-ny.rustdesk.com', RENDEZVOUS_SERVER)
     replace_in_file('libs/hbb_common/src/config.rs', 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', RS_PUB_KEY)
     replace_in_file('src/common.rs', 'https://admin.rustdesk.com', f'https://{API_SERVER}')
@@ -467,12 +474,21 @@ def sctgdesk_customization():
     replace_in_all_toml_files('RustDesk', f'{APP_NAME}')
     replace_in_all_toml_files('"rustdesk"', f'"{APP_NAME}"'.lower())
     replace_in_all_typed_files('plist', 'RustDesk', f'{APP_NAME}')
+    replace_in_all_typed_files('plist', 'com.carriez.rustdesk', f'com.{ORG_NAME}.{APP_NAME}'.lower())
     replace_in_all_typed_files('html', 'rustdesk', f'{APP_NAME}'.lower())
     replace_in_all_typed_files('xcscheme', 'RustDesk', f'{APP_NAME}')
     replace_in_all_typed_files('xcconfig', 'RustDesk', f'{APP_NAME}')
+    replace_in_all_typed_files('xcconfig', 'com.carriez', f'com.{ORG_NAME}'.lower())
     replace_in_all_typed_files('desktop', 'RustDesk', f'{APP_NAME}')
     replace_in_all_typed_files('service', 'RustDesk', f'{APP_NAME}')
     insert_line_after('src/common.rs','pub fn get_api_server',f'    return format!("https://{API_SERVER}");')
+
+def build_ios_ipa(version, features):
+    if not skip_cargo:
+        system2(f'cargo build --features flutter --release --target aarch64-apple-ios --lib')
+    os.chdir('flutter')
+    system2('flutter build ipa --release --no-codesign')
+    os.chdir('..')
 
 def build_flutter_dmg(version, features):
     if not skip_cargo:
@@ -550,6 +566,7 @@ def main():
     version = get_version()
     features = ','.join(get_features(args))
     flutter = args.flutter
+    ios = args.ios
     if not flutter:
         system2('python3 res/inline-sciter.py')
     sctgdesk_customization()
@@ -626,7 +643,9 @@ def main():
         # yum localinstall rustdesk.rpm
     else:
         if flutter:
-            if osx:
+            if ios:
+                build_ios_ipa(version, features)
+            elif osx:
                 build_flutter_dmg(version, features)
                 pass
             else:

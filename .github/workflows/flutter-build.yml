@@ -205,6 +205,7 @@ jobs:
           popd
           mkdir -p ./SignOutput
           mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.exe
+          mv ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.exe ./SignOutput/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.exe
 
       - name: Sign rustdesk self-extracted file
         if: env.UPLOAD_ARTIFACT == 'true' && env.SIGN_BASE_URL != ''
@@ -219,14 +220,13 @@ jobs:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
           files: |
-            ./SignOutput/rustdesk-*.exe
-            ./rustdesk-*.tar.gz
+            ./SignOutput/${{ env.APP_NAME_LOW }}-*.exe
 
       - name: Download, install mc and copy file to S3
         run: |
           curl -o mc.exe https://dl.min.io/client/mc/release/windows-amd64/mc.exe
           .\mc.exe alias set s3release https://${{ secrets.AWS_S3_ENDPOINT }} "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-          .\mc.exe cp './SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.exe' s3release/${{ secrets.AWS_S3_BUCKET }}/'${{ env.APP_NAME_LOW }}-releases/'
+          .\mc.exe cp './SignOutput/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-*.exe' s3release/${{ secrets.AWS_S3_BUCKET }}/'${{ env.APP_NAME_LOW }}-releases/'
         shell: powershell
 
   # The fallback for the flutter version, we use Sciter for 32bit Windows.
@@ -546,7 +546,7 @@ jobs:
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
           for name in ${{ env.APP_NAME_LOW }}*??.dmg; do
-              mv "$name" "${name%%.dmg}-${{ matrix.job.arch }}.dmg"
+              mv -v "$name" "${name%%.dmg}-${{ matrix.job.arch }}.dmg"
           done
 
       - name: Publish DMG package
@@ -563,7 +563,7 @@ jobs:
           curl -o mc https://dl.min.io/client/mc/release/darwin-amd64/mc
           chmod +x mc
           ./mc alias set s3release https://${{ secrets.AWS_S3_ENDPOINT }} "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-          ./mc cp '${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg' s3release/${{ secrets.AWS_S3_BUCKET }}/'${{ env.APP_NAME_LOW }}-releases/'
+          ./mc cp ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/
 
   generate-bridge-linux:
     uses: ./.github/workflows/bridge.yml
