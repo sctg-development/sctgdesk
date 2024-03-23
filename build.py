@@ -444,8 +444,12 @@ def insert_line_after(file_path, search_string, new_line):
 
     for i, line in enumerate(lines):
         if search_string in line:
-            lines.insert(i + 1, new_line + '\n')
-            break
+            # Check if the next line is already equal to new_line
+            if i + 1 < len(lines) and lines[i + 1].strip() == new_line:
+                break
+            else:
+                lines.insert(i + 1, new_line + '\n')
+                break
 
     with open(file_path, 'w') as file:
         file.writelines(lines)
