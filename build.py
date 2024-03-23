@@ -9,6 +9,7 @@ import urllib.request
 import shutil
 import hashlib
 import argparse
+import re
 import sys
 
 windows = platform.platform().startswith('Windows')
@@ -485,10 +486,31 @@ def sctgdesk_customization():
     insert_line_after('src/common.rs','pub fn get_api_server',f'    return format!("https://{API_SERVER}");')
 
 def build_ios_ipa(version, features):
+    MACOS_CODESIGN_IDENTITY = os.environ.get('MACOS_CODESIGN_IDENTITY')
     if not skip_cargo:
         system2(f'cargo build --features flutter --release --target aarch64-apple-ios --lib')
     os.chdir('flutter')
     system2('flutter build ipa --release --no-codesign')
+    match = re.search(r'\(([A-Z0-9]+)\)$', MACOS_CODESIGN_IDENTITY)
+    if match:
+        key = match.group(1)
+        print(key)  # Affiche : 6G4W4D2F29
+        teamID = "6G4W4D2F29"  # Remplacez par la valeur de votre clé
+        xml_content = f'''<?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>{teamID}</string>
+        </dict>
+        </plist>
+        '''
+        with open('ExportOptions.plist', 'w') as f:
+            f.write(xml_content)
+        system2('xcrun xcodebuild archive -scheme Runner -workspace ios/Runner.xcworkspace -allowProvisioningUpdates -configuration Release -archivePath ./build/ios/iphoneos/Runner.xcarchive')
+        system2('xcrun xcodebuild -exportArchive -archivePath ./build/ios/iphoneos/Runner.xcarchive -allowProvisioningUpdates -exportOptionsPlist ../ExportOptions.plist -exportPath ./build/ios/iphoneos/')
     os.chdir('..')
 
 def build_flutter_dmg(version, features):
