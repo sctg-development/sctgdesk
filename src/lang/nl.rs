@@ -239,7 +239,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Empty", "Leeg"),
         ("Invalid folder name", "Ongeldige mapnaam"),
         ("Socks5 Proxy", "Socks5 Proxy"),
-        ("Hostname", "Hostnaam"),
         ("Discovered", "Ontdekt"),
         ("install_daemon_tip", "Om bij het opstarten van de computer te kunnen beginnen, moet u de systeemservice installeren."),
         ("Remote ID", "Externe ID"),
@@ -596,10 +595,10 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Set shared password", "Gedeeld wachtwoord instellen"),
         ("Exist in", "Bestaat in"),
         ("Read-only", "Alleen-lezen"),
-        ("Read/Write", "Lezen / Schrijven"),
+        ("Read/Write", "Lezen/Schrijven"),
         ("Full Control", "Volledige Controle"),
-        ("share_warning_tip", ""),
+        ("share_warning_tip", "De bovenstaande velden worden gedeeld en zijn zichtbaar voor anderen."),
         ("Everyone", "Iedereen"),
-        ("ab_web_console_tip", ""),
+        ("ab_web_console_tip", "Meer over de webconsole"),
     ].iter().cloned().collect();
 }
