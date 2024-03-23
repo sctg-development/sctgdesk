@@ -223,6 +223,28 @@ jobs:
       #     files: |
       #       ./SignOutput/${{ env.APP_NAME_LOW }}-*.exe
 
+      - name: Import PKCS12 certificate
+        run: |
+          $p12_base64 = "${{ secrets.MACOS_P12_BASE64 }}"
+          $p12_password = "${{ secrets.MACOS_P12_PASSWORD }}"
+          $collection = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2Collection
+          $collection.Import($p12_bytes, $p12_password, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::PersistKeySet)
+          $store = New-Object System.Security.Cryptography.X509Certificates.X509Store -ArgumentList "My", "CurrentUser"
+          $store.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
+          foreach ($cert in $collection) {
+              $store.Add($cert)
+          }
+          $store.Close()
+        shell: powershell
+
+      - name: Sign executable
+        run: |
+          $subjectName = "${{ secrets.MACOS_CODESIGN_IDENTITY }}"
+          $timestampServerUrl = "http://timestamp.digicert.com"
+          $exePath = ".\SignOutput\${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.exe"
+          & 'C:\Program Files (x86)\Windows Kits\10\bin\x64\signtool.exe' sign /n $subjectName /tr $timestampServerUrl /td SHA256 /fd SHA256 /v $exePath
+        shell: powershell
+
       - name: Download, install mc and copy file to S3
         run: |
           curl -o mc.exe https://dl.min.io/client/mc/release/windows-amd64/mc.exe
@@ -1070,9 +1092,9 @@ jobs:
           curl -o mc https://dl.min.io/client/mc/release/linux-amd64/mc
           chmod +x mc
           ./mc alias set s3release https://${{ secrets.AWS_S3_ENDPOINT }} "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-          echo "Copying ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg to s3"
-          echo "./mc cp ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.deb s3release/${{ secrets.AWS_S3_BUCKET }}/"
-          ./mc cp ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.deb s3release/${{ secrets.AWS_S3_BUCKET }}/
+          echo "Copying ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.deb to s3"
+          echo "./mc cp '${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.deb' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.deb'"
+          ./mc cp '${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.deb' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.deb'
 
       - name: Upload Artifact
         uses: actions/upload-artifact@master
@@ -1139,8 +1161,8 @@ jobs:
           chmod +x mc
           ./mc alias set s3release https://${{ secrets.AWS_S3_ENDPOINT }} "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
           echo "Copying ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg to s3"
-          echo "./mc cp res/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.zst s3release/${{ secrets.AWS_S3_BUCKET }}/"
-          ./mc cp res/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.zst s3release/${{ secrets.AWS_S3_BUCKET }}/
+          echo "./mc cp 'res/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.zst' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/'"
+          ./mc cp res/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.zst 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/''
 
       - name: Build appimage package
         if: matrix.job.extra-build-features == 'appimage' && env.UPLOAD_ARTIFACT == 'true'
@@ -1331,5 +1353,5 @@ jobs:
           chmod +x mc
           ./mc alias set s3release https://${{ secrets.AWS_S3_ENDPOINT }} "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
           echo "Copying ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg to s3"
-          echo "./mc cp flatpak/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.flatpak s3release/${{ secrets.AWS_S3_BUCKET }}/"
-          ./mc cp flatpak/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.flatpak s3release/${{ secrets.AWS_S3_BUCKET }}/
+          echo "./mc cp 'flatpak/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.flatpak' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/'"
+          ./mc cp 'flatpak/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.flatpak' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/''
