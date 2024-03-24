@@ -28,6 +28,7 @@ ingress:
   clusterIssuer: "cert-manager"
 
 api:
+  image: eltorio/sctgdesk-api-server:v1.4.6
   authkey: "123456789"
   cryptkey: "NanEVhjEwuPSemoJkwcYEcjDJRVWcZfb9bIIZcBeswhPProot"
 

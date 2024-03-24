@@ -31,10 +31,13 @@ spec:
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         # command: [ "{{ .Values.hbbs.command }}" ]
-        command: [ "/bin/sh", "-c", "ln -svf {{ .Values.volume.mountPath }}/secrets/* {{ .Values.volume.mountPath }}/ && {{ .Values.hbbs.command }} -r {{ .Values.ingress.host }}:21117" ]
+        command: [ "/bin/sh", "-c", "ln -svf {{ .Values.volume.mountPath }}/secrets/* {{ .Values.volume.mountPath }}/ && {{ .Values.hbbs.command }}  -k {{ .Values.secret.id_ed25519 | b64dec }}" ]
         env:
         - name: KEY
-          value: "_"
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-secret
+              key: id_ed25519
         - name: KEY_PUB
           valueFrom:
             secretKeyRef:
@@ -68,7 +71,7 @@ spec:
       - name: hbbr
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        command: [ "/bin/sh", "-c", "ln -svf {{ .Values.volume.mountPath }}/secrets/* {{ .Values.volume.mountPath }}/ && {{ .Values.hbbr.command }}" ]
+        command: [ "/bin/sh", "-c", "ln -svf {{ .Values.volume.mountPath }}/secrets/* {{ .Values.volume.mountPath }}/ && {{ .Values.hbbr.command }} -k {{ .Values.secret.id_ed25519 | b64dec }}" ]
         env:
         - name: RUST_LOG
           value: {{ .Values.loglevel }}
