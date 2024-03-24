@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: {{ .Release.Name }}-api-server-container
-        image: eltorio/sctgdesk-api-server:v1.4.5
+        image: {{ .Values.api.image }}
         command: 
             - "/bin/sh"
             - "-c"
