@@ -1145,22 +1145,15 @@ jobs:
             gst-plugin-pipewire
           scripts: |
             cd res && HBB=`pwd`/.. FLUTTER=1 makepkg -f
-            ls -l
-            mv res/rustdesk-${{ env.VERSION }}*.zst res/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.zst
-            echo "Archlinux package built successfully transferring to s3"
-            echo "Copying res/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.zst to s3"
-            echo "./mc cp 'res/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.zst' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.zst'"
-            ./mc cp 'res/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.zst' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.zst'
 
-
-      # - name: Publish archlinux package
-      #   if: matrix.job.extra-build-features == '' && env.UPLOAD_ARTIFACT == 'true'
-      #   uses: softprops/action-gh-release@v2
-      #   with:
-      #     prerelease: true
-      #     tag_name: ${{ env.TAG_NAME }}
-      #     files: |
-      #       res/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.zst
+      - name: Publish archlinux package
+        if: matrix.job.extra-build-features == '' && env.UPLOAD_ARTIFACT == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          prerelease: true
+          tag_name: ${{ env.TAG_NAME }}
+          files: |
+            res/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.zst
 
       - name: Build appimage package
         if: matrix.job.extra-build-features == 'appimage' && env.UPLOAD_ARTIFACT == 'true'
@@ -1179,23 +1172,23 @@ jobs:
           ls -l
           ls -l /opt/artifacts/rpm/*.rpm
 
-      # - name: Publish appimage package
-      #   if: matrix.job.extra-build-features == 'appimage' && env.UPLOAD_ARTIFACT == 'true'
-      #   uses: softprops/action-gh-release@v1
-      #   with:
-      #     prerelease: true
-      #     tag_name: ${{ env.TAG_NAME }}
-      #     files: |
-      #       ./appimage/rustdesk-${{ env.VERSION }}-*.AppImage
+      - name: Publish appimage package
+        if: matrix.job.extra-build-features == 'appimage' && env.UPLOAD_ARTIFACT == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          prerelease: true
+          tag_name: ${{ env.TAG_NAME }}
+          files: |
+            ./appimage/rustdesk-${{ env.VERSION }}-*.AppImage
 
-      # - name: Publish fedora package
-      #   if: matrix.job.extra-build-features == '' && env.UPLOAD_ARTIFACT == 'true'
-      #   uses: softprops/action-gh-release@v1
-      #   with:
-      #     prerelease: true
-      #     tag_name: ${{ env.TAG_NAME }}
-      #     files: |
-      #       /opt/artifacts/rpm/*.rpm
+      - name: Publish fedora package
+        if: matrix.job.extra-build-features == '' && env.UPLOAD_ARTIFACT == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          prerelease: true
+          tag_name: ${{ env.TAG_NAME }}
+          files: |
+            /opt/artifacts/rpm/*.rpm
 
   # Temporary disable flatpak arm build
   #
