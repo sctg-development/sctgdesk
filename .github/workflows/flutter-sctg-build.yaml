@@ -1088,7 +1088,7 @@ jobs:
       #     files: |
       #       ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.deb
 
-      - name: Download, install mc and copy file to S3
+      - name: Download, install mc and copy deb file to S3
         run: |
           curl -o mc https://dl.min.io/client/mc/release/linux-amd64/mc
           chmod +x mc
@@ -1145,7 +1145,12 @@ jobs:
             gst-plugin-pipewire
           scripts: |
             cd res && HBB=`pwd`/.. FLUTTER=1 makepkg -f
-            mv res/rustdesk-${{ env.VERSION }}*.zst res/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.zst
+            mv -v res/rustdesk-${{ env.VERSION }}*.zst res/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.zst
+            echo "Archlinux package built successfully transferring to s3"
+            echo "Copying res/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.zst to s3"
+            echo "./mc cp 'res/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.zst' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.zst'"
+            ./mc cp 'res/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.zst' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.zst'
+
 
       # - name: Publish archlinux package
       #   if: matrix.job.extra-build-features == '' && env.UPLOAD_ARTIFACT == 'true'
@@ -1155,12 +1160,6 @@ jobs:
       #     tag_name: ${{ env.TAG_NAME }}
       #     files: |
       #       res/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.zst
-
-      - name: Download, install mc and copy file to S3
-        run: |
-          echo "Copying ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}.dmg to s3"
-          echo "./mc cp 'res/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.zst' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/'"
-          ./mc cp res/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.zst 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/'
 
       - name: Build appimage package
         if: matrix.job.extra-build-features == 'appimage' && env.UPLOAD_ARTIFACT == 'true'
@@ -1175,6 +1174,9 @@ jobs:
           # run appimage-builder
           pushd appimage
           sudo appimage-builder --skip-tests --recipe ./AppImageBuilder-x86_64.yml
+          echo "Appimage package built successfully transferring to s3"
+          ls -l
+          ls -l /opt/artifacts/rpm/*.rpm
 
       # - name: Publish appimage package
       #   if: matrix.job.extra-build-features == 'appimage' && env.UPLOAD_ARTIFACT == 'true'
