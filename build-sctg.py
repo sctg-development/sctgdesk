@@ -471,6 +471,7 @@ def sctgdesk_customization():
     RS_PUB_KEY = os.environ['RS_PUB_KEY']
     API_SERVER = os.environ['API_SERVER']
     ORG_NAME = os.environ['ORG_NAME']
+    replace_in_file('flutter/web/client.html', '__API_SERVER__', f'https://{API_SERVER}')
     replace_in_file('libs/hbb_common/src/config.rs', 'rs-ny.rustdesk.com', RENDEZVOUS_SERVER)
     replace_in_file('libs/hbb_common/src/config.rs', 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', RS_PUB_KEY)
     replace_in_all_typed_files('ts', 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', RS_PUB_KEY)
