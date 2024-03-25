@@ -161,6 +161,11 @@ def make_parser():
         help='Build ios ipa'
     )
     parser.add_argument(
+        '--web',
+        action='store_true',
+        help='Build web app'
+    )
+    parser.add_argument(
         "--package",
         type=str
     )
@@ -534,6 +539,10 @@ def build_flutter_dmg(version, features):
     system2(f'codesign --force --options runtime -s "{MACOS_CODESIGN_IDENTITY}" --deep --strict ../{app_name}-{version}.dmg -vvv')
     os.chdir("..")
 
+def build_web_app():
+    os.chdir('flutter')
+    system2('flutter build web --release')
+    os.chdir("..")
 
 def build_flutter_arch_manjaro(version, features):
     if not skip_cargo:
@@ -590,6 +599,7 @@ def main():
     features = ','.join(get_features(args))
     flutter = args.flutter
     ios = args.ios
+    web = args.web
     if not flutter:
         system2('python3 res/inline-sciter.py')
     sctgdesk_customization()
@@ -603,6 +613,9 @@ def main():
         return
     res_dir = 'resources'
     external_resources(flutter, args, res_dir)
+    if web:
+        build_web_app()
+        return
     if windows:
         # build virtual display dynamic library
         os.chdir('libs/virtual_display/dylib')
