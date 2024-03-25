@@ -474,6 +474,8 @@ def sctgdesk_customization():
     replace_in_file('flutter/web/client.html', '__API_SERVER__', f'https://{API_SERVER}')
     replace_in_file('libs/hbb_common/src/config.rs', 'rs-ny.rustdesk.com', RENDEZVOUS_SERVER)
     replace_in_file('libs/hbb_common/src/config.rs', 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', RS_PUB_KEY)
+    replace_in_file('flutter/web/js/src/connection.ts', 'const PORT = 21116', 'const PORT = 21118')
+    replace_in_file('flutter/web/js/src/connection.ts', 'ws://', 'wss://')
     replace_in_all_typed_files('ts', 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', RS_PUB_KEY)
     replace_in_all_typed_files('ts', 'rs-ny.rustdesk.com', RENDEZVOUS_SERVER)
     replace_in_all_typed_files('ts', 'rs-sg.rustdesk.com', RENDEZVOUS_SERVER)
