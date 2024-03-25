@@ -31,6 +31,16 @@ api:
   image: eltorio/sctgdesk-api-server:v1.4.6
   authkey: "123456789"
   cryptkey: "NanEVhjEwuPSemoJkwcYEcjDJRVWcZfb9bIIZcBeswhPProot"
+  s3:
+    endpoint: "https://s3.amazonaws.com"
+    region: "us-east-1"
+    access_key: "access_key"
+    secret_key: "secret"
+    bucket: "bucket"
+    windows64_key: "windows64.exe"
+    windows32_key: "windows32.exe"
+    osx_key: "osx.dmg"
+    osx_arm64_key: "osx_arm64.dmg"
 
 gateway:
   enabled: false
