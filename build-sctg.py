@@ -499,7 +499,7 @@ def sctgdesk_customization():
     replace_in_all_typed_files('desktop', 'RustDesk', f'{APP_NAME}')
     replace_in_all_typed_files('service', 'RustDesk', f'{APP_NAME}')
     insert_line_after('src/common.rs','pub fn get_api_server',f'    return format!("https://{API_SERVER}");')
-    insert_line_after('flutter/web/js/src/globals.js','function getApiServer()',f'    return "https://{API_SERVER}";')
+    insert_line_after('flutter/web/js/src/globals.js','function getApiServer()',f'  return "https://{API_SERVER}";')
 
 def build_ios_ipa(version, features):
     MACOS_CODESIGN_IDENTITY = os.environ.get('MACOS_CODESIGN_IDENTITY')
