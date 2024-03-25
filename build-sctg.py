@@ -473,6 +473,11 @@ def sctgdesk_customization():
     ORG_NAME = os.environ['ORG_NAME']
     replace_in_file('libs/hbb_common/src/config.rs', 'rs-ny.rustdesk.com', RENDEZVOUS_SERVER)
     replace_in_file('libs/hbb_common/src/config.rs', 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', RS_PUB_KEY)
+    replace_in_file('flutter/web/js/src/connection.ts', 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', RS_PUB_KEY)
+    replace_in_file('flutter/web/js/src/connection.ts', 'rs-ny.rustdesk.com', RENDEZVOUS_SERVER)
+    replace_in_file('flutter/web/js/src/connection.ts', 'rs-sg.rustdesk.com', RENDEZVOUS_SERVER)
+    replace_in_file('flutter/web/js/src/connection.ts', 'rs-cn.rustdesk.com', RENDEZVOUS_SERVER)
+    replace_in_file('flutter/web/js/src/connection.ts', 'rs-us.rustdesk.com', RENDEZVOUS_SERVER)
     replace_in_file('src/common.rs', 'https://admin.rustdesk.com', f'https://{API_SERVER}')
     replace_in_all_dart_files('RustDesk', f'{APP_NAME}')
     replace_in_all_rust_files('RustDesk', f'{APP_NAME}')
