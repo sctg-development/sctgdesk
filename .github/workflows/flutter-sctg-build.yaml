@@ -90,17 +90,6 @@ jobs:
 
       - name: Checkout source code
         uses: actions/checkout@v4
-
-      # Workaround customisation
-      - name: Patch our servers and our keys
-        run: |
-          $env:RS_PUB_KEY="${{ secrets.RS_PUB_KEY }}"
-          $env:RENDEZVOUS_SERVER="${{ secrets.RENDEZVOUS_SERVER }}"
-          $env:API_SERVER="${{ secrets.API_SERVER }}"
-          (Get-Content libs/hbb_common/src/config.rs) -replace 'rs-ny.rustdesk.com', $env:RENDEZVOUS_SERVER | Set-Content libs/hbb_common/src/config.rs
-          (Get-Content libs/hbb_common/src/config.rs) -replace 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', $env:RS_PUB_KEY | Set-Content libs/hbb_common/src/config.rs
-          (Get-Content libs/hbb_common/src/config.rs) -replace 'https://admin.rustdesk.com', "https://${env:API_SERVER}" | Set-Content libs/hbb_common/src/config.rs
-        shell: powershell
       
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v1
