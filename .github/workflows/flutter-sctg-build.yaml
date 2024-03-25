@@ -157,7 +157,7 @@ jobs:
           set RS_PUB_KEY=${{ secrets.RS_PUB_KEY }}
           set API_SERVER=${{ secrets.API_SERVER }}
           set APP_NAME=${{ secrets.APP_NAME }}
-          python3 .\build.py --portable --hwcodec --flutter --gpucodec --skip-portable-pack
+          python3 .\build-sctg.py --portable --hwcodec --flutter --gpucodec --skip-portable-pack
         shell: cmd
 
       - name: find Runner.res
@@ -363,7 +363,7 @@ jobs:
       - name: Build rustdesk
         run: |
           # --hwcodec not supported on macos yet
-          ./build.py --flutter ${{ matrix.job.extra-build-args }}
+          ./build-sctg.py --flutter ${{ matrix.job.extra-build-args }}
           ls -l || true
           ls -l  ./flutter/build/macos/Build/Products/Release/ || true
 
@@ -509,7 +509,7 @@ jobs:
           security default-keychain -s rustdesk.keychain
           echo "Unlocking keychain"
           security unlock-keychain -p ${{ secrets.MACOS_P12_PASSWORD }} rustdesk.keychain
-          ./build.py --flutter --ios
+          ./build-sctg.py --flutter --ios
 
       - name: Download, install mc and copy file to S3
         run: |
@@ -1043,7 +1043,7 @@ jobs:
             export PATH=/opt/flutter/bin:$PATH
             flutter doctor -v
             pushd /workspace
-            python3 ./build.py --flutter --hwcodec --skip-cargo
+            python3 ./build-sctg.py --flutter --hwcodec --skip-cargo
             # rpm package
             pushd /workspace
             case ${{ matrix.job.arch }} in

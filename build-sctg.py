@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import glob
 import pathlib
 import platform
 import zipfile
@@ -8,6 +9,7 @@ import urllib.request
 import shutil
 import hashlib
 import argparse
+import re
 import sys
 
 windows = platform.platform().startswith('Windows')
@@ -153,6 +155,11 @@ def make_parser():
             action='store_true',
             help='Skip packing, only flutter version + Windows supported'
         )
+    parser.add_argument(
+        '--ios',
+        action='store_true',
+        help='Build ios ipa'
+    )
     parser.add_argument(
         "--package",
         type=str
@@ -410,20 +417,121 @@ def build_deb_from_folder(version, binary_folder):
     os.rename('rustdesk.deb', '../rustdesk-%s.deb' % version)
     os.chdir("..")
 
+def replace_in_file(file_path, old_string, new_string):
+    with open(file_path, 'r', encoding='utf-8', errors='replace') as file:
+        file_data = file.read()
+
+    # Remplacer la chaîne
+    file_data = file_data.replace(old_string, new_string)
+
+    # Écrire le résultat dans le fichier
+    with open(file_path, 'w', encoding='utf-8') as file:
+        file.write(file_data)
+
+def replace_in_all_dart_files(old_string, new_string):
+    for file_path in glob.glob('**/*.dart', recursive=True):
+        replace_in_file(file_path, old_string, new_string)
+
+def replace_in_all_rust_files(old_string, new_string):
+    for file_path in glob.glob('**/*.rs', recursive=True):
+        replace_in_file(file_path, old_string, new_string)
+
+def replace_in_all_toml_files(old_string, new_string):
+    for file_path in glob.glob('**/*.toml', recursive=True):
+        replace_in_file(file_path, old_string, new_string)
+
+def replace_in_all_typed_files(type, old_string, new_string):
+    for file_path in glob.glob(f'**/*.{type}', recursive=True):
+        replace_in_file(file_path, old_string, new_string)
+
+def insert_line_after(file_path, search_string, new_line):
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+
+    for i, line in enumerate(lines):
+        if search_string in line:
+            # Check if the next line is already equal to new_line
+            if i + 1 < len(lines) and lines[i + 1].strip() == new_line:
+                break
+            else:
+                lines.insert(i + 1, new_line + '\n')
+                break
+
+    with open(file_path, 'w') as file:
+        file.writelines(lines)
+
+def sctgdesk_customization():
+    APP_NAME = os.environ['APP_NAME']
+    RENDEZVOUS_SERVER = os.environ['RENDEZVOUS_SERVER']
+    RS_PUB_KEY = os.environ['RS_PUB_KEY']
+    API_SERVER = os.environ['API_SERVER']
+    ORG_NAME = os.environ['ORG_NAME']
+    replace_in_file('libs/hbb_common/src/config.rs', 'rs-ny.rustdesk.com', RENDEZVOUS_SERVER)
+    replace_in_file('libs/hbb_common/src/config.rs', 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', RS_PUB_KEY)
+    replace_in_file('src/common.rs', 'https://admin.rustdesk.com', f'https://{API_SERVER}')
+    replace_in_all_dart_files('RustDesk', f'{APP_NAME}')
+    replace_in_all_rust_files('RustDesk', f'{APP_NAME}')
+    replace_in_all_toml_files('RustDesk', f'{APP_NAME}')
+    replace_in_all_toml_files('"rustdesk"', f'"{APP_NAME}"'.lower())
+    replace_in_all_typed_files('plist', 'RustDesk', f'{APP_NAME}')
+    replace_in_all_typed_files('plist', 'com.carriez.rustdesk', f'com.{ORG_NAME}.{APP_NAME}'.lower())
+    replace_in_all_typed_files('plist', 'com.carriez.flutterHbb', f'com.{ORG_NAME}.{APP_NAME}-ios'.lower())
+    replace_in_all_typed_files('pbxproj', 'com.carriez.flutterHbb', f'com.{ORG_NAME}.{APP_NAME}-ios'.lower())
+    replace_in_all_typed_files('html', 'rustdesk', f'{APP_NAME}'.lower())
+    replace_in_all_typed_files('xcscheme', 'RustDesk', f'{APP_NAME}')
+    replace_in_all_typed_files('xcconfig', 'RustDesk', f'{APP_NAME}')
+    replace_in_all_typed_files('xcconfig', 'com.carriez', f'com.{ORG_NAME}'.lower())
+    replace_in_all_typed_files('desktop', 'RustDesk', f'{APP_NAME}')
+    replace_in_all_typed_files('service', 'RustDesk', f'{APP_NAME}')
+    insert_line_after('src/common.rs','pub fn get_api_server',f'    return format!("https://{API_SERVER}");')
+
+def build_ios_ipa(version, features):
+    MACOS_CODESIGN_IDENTITY = os.environ.get('MACOS_CODESIGN_IDENTITY')
+    if not skip_cargo:
+        system2(f'cargo build --features flutter --release --target aarch64-apple-ios --lib')
+    os.chdir('flutter')
+    system2('flutter build ipa --release --no-codesign')
+    match = re.search(r'\(([A-Z0-9]+)\)$', MACOS_CODESIGN_IDENTITY)
+    if match:
+        key = match.group(1)
+        print(key)  # Affiche : 6G4W4D2F29
+        teamID = "6G4W4D2F29"  # Remplacez par la valeur de votre clé
+        xml_content = f'''<?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>{teamID}</string>
+        </dict>
+        </plist>
+        '''
+        with open('ExportOptions.plist', 'w') as f:
+            f.write(xml_content)
+        system2('xcrun xcodebuild archive -scheme Runner -workspace ios/Runner.xcworkspace -configuration Release -archivePath ./build/ios/iphoneos/Runner.xcarchive')
+        system2('xcrun xcodebuild -exportArchive -archivePath ./build/ios/iphoneos/Runner.xcarchive -exportOptionsPlist ../ExportOptions.plist -exportPath ./build/ios/iphoneos/')
+    os.chdir('..')
 
 def build_flutter_dmg(version, features):
     if not skip_cargo:
         # set minimum osx build target, now is 10.14, which is the same as the flutter xcode project
         system2(
             f'MACOSX_DEPLOYMENT_TARGET=10.14 cargo build --features {features} --lib --release')
+
     # copy dylib
     system2(
         "cp target/release/liblibrustdesk.dylib target/release/librustdesk.dylib")
     os.chdir('flutter')
     system2('flutter build macos --release')
+    APP_NAME = os.environ['APP_NAME']
+    app_name = APP_NAME.lower()
+    MACOS_CODESIGN_IDENTITY = os.environ.get('MACOS_CODESIGN_IDENTITY')
+    system2(f'codesign --force --options runtime -s "{MACOS_CODESIGN_IDENTITY}" --deep --strict ./build/macos/Build/Products/Release/{APP_NAME}.app -vvv')
     system2(
-        "create-dmg --volname \"RustDesk Installer\" --window-pos 200 120 --window-size 800 400 --icon-size 100 --app-drop-link 600 185 --icon RustDesk.app 200 190 --hide-extension RustDesk.app rustdesk.dmg ./build/macos/Build/Products/Release/RustDesk.app")
-    os.rename("rustdesk.dmg", f"../rustdesk-{version}.dmg")
+        f"create-dmg --volname \"RustDesk Installer\" --window-pos 200 120 --window-size 800 400 --icon-size 100 --app-drop-link 600 185 --icon {APP_NAME}.app 200 190 --hide-extension {APP_NAME}.app {app_name}.dmg ./build/macos/Build/Products/Release/{APP_NAME}.app")
+    os.rename(f"{app_name}.dmg", f"../{app_name}-{version}.dmg")
+    system2(f'codesign --force --options runtime -s "{MACOS_CODESIGN_IDENTITY}" --deep --strict ../{app_name}-{version}.dmg -vvv')
     os.chdir("..")
 
 
@@ -481,8 +589,10 @@ def main():
     version = get_version()
     features = ','.join(get_features(args))
     flutter = args.flutter
+    ios = args.ios
     if not flutter:
         system2('python3 res/inline-sciter.py')
+    sctgdesk_customization()
     print(args.skip_cargo)
     if args.skip_cargo:
         skip_cargo = True
@@ -556,7 +666,9 @@ def main():
         # yum localinstall rustdesk.rpm
     else:
         if flutter:
-            if osx:
+            if ios:
+                build_ios_ipa(version, features)
+            elif osx:
                 build_flutter_dmg(version, features)
                 pass
             else:
