@@ -1397,10 +1397,10 @@ jobs:
           tar xzf web_deps.tar.gz
           popd
 
-          # pushd flutter
-          # flutter build web --release
-          # cd build
           python3 ./build-sctg.py --web
+          pushd flutter
+          # flutter build web --release
+          cd build
           cp ../web/README.md web
           # TODO: Remove the following line when the web is almost complete.
           echo -e "\n\nThis build is for preview and not full functionality." >> web/README.md
