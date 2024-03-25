@@ -473,11 +473,16 @@ def sctgdesk_customization():
     ORG_NAME = os.environ['ORG_NAME']
     replace_in_file('libs/hbb_common/src/config.rs', 'rs-ny.rustdesk.com', RENDEZVOUS_SERVER)
     replace_in_file('libs/hbb_common/src/config.rs', 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', RS_PUB_KEY)
-    replace_in_file('flutter/web/js/src/connection.ts', 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', RS_PUB_KEY)
-    replace_in_file('flutter/web/js/src/connection.ts', 'rs-ny.rustdesk.com', RENDEZVOUS_SERVER)
-    replace_in_file('flutter/web/js/src/connection.ts', 'rs-sg.rustdesk.com', RENDEZVOUS_SERVER)
-    replace_in_file('flutter/web/js/src/connection.ts', 'rs-cn.rustdesk.com', RENDEZVOUS_SERVER)
-    replace_in_file('flutter/web/js/src/connection.ts', 'rs-us.rustdesk.com', RENDEZVOUS_SERVER)
+    replace_in_all_typed_files('ts', 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', RS_PUB_KEY)
+    replace_in_all_typed_files('ts', 'rs-ny.rustdesk.com', RENDEZVOUS_SERVER)
+    replace_in_all_typed_files('ts', 'rs-sg.rustdesk.com', RENDEZVOUS_SERVER)
+    replace_in_all_typed_files('ts', 'rs-cn.rustdesk.com', RENDEZVOUS_SERVER)
+    replace_in_all_typed_files('ts', 'rs-us.rustdesk.com', RENDEZVOUS_SERVER)
+    replace_in_all_typed_files('js', 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', RS_PUB_KEY)
+    replace_in_all_typed_files('js', 'rs-ny.rustdesk.com', RENDEZVOUS_SERVER)
+    replace_in_all_typed_files('js', 'rs-sg.rustdesk.com', RENDEZVOUS_SERVER)
+    replace_in_all_typed_files('js', 'rs-cn.rustdesk.com', RENDEZVOUS_SERVER)
+    replace_in_all_typed_files('js', 'rs-us.rustdesk.com', RENDEZVOUS_SERVER)
     replace_in_file('src/common.rs', 'https://admin.rustdesk.com', f'https://{API_SERVER}')
     replace_in_all_dart_files('RustDesk', f'{APP_NAME}')
     replace_in_all_rust_files('RustDesk', f'{APP_NAME}')
@@ -494,6 +499,7 @@ def sctgdesk_customization():
     replace_in_all_typed_files('desktop', 'RustDesk', f'{APP_NAME}')
     replace_in_all_typed_files('service', 'RustDesk', f'{APP_NAME}')
     insert_line_after('src/common.rs','pub fn get_api_server',f'    return format!("https://{API_SERVER}");')
+    insert_line_after('flutter/web/js/src/globals.js','function getApiServer()',f'    return "https://{API_SERVER}";')
 
 def build_ios_ipa(version, features):
     MACOS_CODESIGN_IDENTITY = os.environ.get('MACOS_CODESIGN_IDENTITY')
@@ -546,6 +552,9 @@ def build_flutter_dmg(version, features):
 
 def build_web_app():
     os.chdir('flutter')
+    os.chdir('web/js')
+    system2('npx vite build')
+    os.chdir('../..')
     system2('flutter build web --release')
     os.chdir("..")
 
