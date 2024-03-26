@@ -352,6 +352,7 @@ jobs:
       - name: Build rustdesk
         run: |
           # --hwcodec not supported on macos yet
+          chmod +x ./build-sctg.py
           ./build-sctg.py --flutter ${{ matrix.job.extra-build-args }}
           ls -l || true
           ls -l  ./flutter/build/macos/Build/Products/Release/ || true
