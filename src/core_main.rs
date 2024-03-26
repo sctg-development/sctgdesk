@@ -265,10 +265,9 @@ pub fn core_main() -> Option<Vec<String>> {
             return None;
         } else if args[0] == "--uninstall-service" {
             log::info!("start --uninstall-service");
-            crate::platform::uninstall_service(false);
+            crate::platform::uninstall_service(false, true);
+            return None;
         } else if args[0] == "--service" {
-            #[cfg(target_os = "macos")]
-            crate::platform::macos::hide_dock();
             log::info!("start --service");
             crate::start_os_service();
             return None;
@@ -279,7 +278,6 @@ pub fn core_main() -> Option<Vec<String>> {
             #[cfg(any(target_os = "linux", target_os = "windows"))]
             {
                 crate::start_server(true);
-                return None;
             }
             #[cfg(target_os = "macos")]
             {
@@ -288,6 +286,7 @@ pub fn core_main() -> Option<Vec<String>> {
                 // prevent server exit when encountering errors from tray
                 hbb_common::allow_err!(handler.join());
             }
+            return None;
         } else if args[0] == "--import-config" {
             if args.len() == 2 {
                 let filepath;
