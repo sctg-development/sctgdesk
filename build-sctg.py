@@ -466,11 +466,17 @@ def insert_line_after(file_path, search_string, new_line):
         file.writelines(lines)
 
 def sctgdesk_customization():
+    MACOS_CODESIGN_IDENTITY = os.environ.get('MACOS_CODESIGN_IDENTITY')
     APP_NAME = os.environ['APP_NAME']
     RENDEZVOUS_SERVER = os.environ['RENDEZVOUS_SERVER']
     RS_PUB_KEY = os.environ['RS_PUB_KEY']
     API_SERVER = os.environ['API_SERVER']
     ORG_NAME = os.environ['ORG_NAME']
+    TEAM_ID="HZF9JMC8YN"
+    match = re.search(r'\(([A-Z0-9]+)\)$', MACOS_CODESIGN_IDENTITY)
+    if match:
+        TEAM_ID = match.group(1)
+    replace_in_file('flutter/ios/Runner.xcodeproj/project.pbxproj',"HZF9JMC8YN",TEAM_ID)
     replace_in_file('flutter/web/client.html', '__API_SERVER__', f'https://{API_SERVER}')
     replace_in_file('libs/hbb_common/src/config.rs', 'rs-ny.rustdesk.com', RENDEZVOUS_SERVER)
     replace_in_file('libs/hbb_common/src/config.rs', 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', RS_PUB_KEY)
@@ -517,8 +523,8 @@ def build_ios_ipa(version, features):
     match = re.search(r'\(([A-Z0-9]+)\)$', MACOS_CODESIGN_IDENTITY)
     if match:
         key = match.group(1)
-        print(key)  # Affiche : 6G4W4D2F29
-        teamID = "6G4W4D2F29"  # Remplacez par la valeur de votre clé
+        print(key)
+        teamID = key
         xml_content = f'''<?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
         <plist version="1.0">
@@ -534,6 +540,8 @@ def build_ios_ipa(version, features):
         </plist>
         '''
         with open('ExportOptions.plist', 'w') as f:
+            f.write(xml_content)
+        with open('ios/exportOptions.plist', 'w') as f:
             f.write(xml_content)
         system2("echo 'xcrun xcodebuild archive -scheme Runner -workspace ios/Runner.xcworkspace -configuration Release -archivePath ./build/ios/iphoneos/Runner.xcarchive'")
         system2("echo 'xcrun xcodebuild -exportArchive -archivePath ./build/ios/iphoneos/Runner.xcarchive -exportOptionsPlist ../ExportOptions.plist -exportPath ./build/ios/iphoneos/'")
@@ -565,6 +573,7 @@ def build_web_app():
     os.chdir('web/js')
     system2('npx vite build')
     os.chdir('../..')
+    system2('flutter pub upgrade')
     system2('flutter build web --release')
     os.chdir("..")
 
@@ -586,6 +595,7 @@ def build_flutter_windows(version, features, skip_portable_pack):
             print("cargo build failed, please check rust source code.")
             exit(-1)
     os.chdir('flutter')
+    system2('flutter pub upgrade')
     system2('flutter build windows --release')
     os.chdir('..')
     shutil.copy2('target/release/deps/dylib_virtual_display.dll',
