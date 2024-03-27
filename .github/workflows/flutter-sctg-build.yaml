@@ -1406,6 +1406,9 @@ jobs:
           mv web/index.html web/sctgdesk.html
           mv web/client.html web/index.html
           mv web "${dir_name}" && tar czf "${dir_name}".tar.gz "${dir_name}"
+          cd "${dir_name}"
+          zip -9 -r "../${dir_name}".zip .
+          cd ..
           sha256sum "${dir_name}".tar.gz
           popd
 
@@ -1418,6 +1421,7 @@ jobs:
           echo "Copying flutter/build/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.tar.gz to s3"
           echo "./mc cp 'flutter/build/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.tar.gz' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-web-${{ env.VERSION }}.tar.gz'"
           ./mc cp 'flutter/build/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.tar.gz' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-web-${{ env.VERSION }}.tar.gz'
+          ./mc cp 'flutter/build/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.zip' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.zip'
 
   build-rustdesk-web:
     name: build-rustdesk-web
@@ -1471,11 +1475,8 @@ jobs:
           cp ../web/README.md web
           # TODO: Remove the following line when the web is almost complete.
           echo -e "\n\nThis build is for preview and not full functionality." >> web/README.md
-          dir_name="rustdesk-${{ env.VERSION }}-${{ env.RELEASE_NAME }}"
+          dir_name="${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ env.RELEASE_NAME }}"
           mv web "${dir_name}" && tar czf "${dir_name}".tar.gz "${dir_name}"
-          cd "${dir_name}"
-          zip -9 -r "../${dir_name}".zip .
-          cd ..
           sha256sum "${dir_name}".tar.gz
           popd
 
@@ -1488,4 +1489,4 @@ jobs:
           echo "Copying flutter/build/rustdesk-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.tar.gz to s3"
           echo "./mc cp 'flutter/build/rustdesk-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.tar.gz' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/rustdesk-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.tar.gz'"
           ./mc cp 'flutter/build/rustdesk-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.tar.gz' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/rustdesk-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.tar.gz'
-          ./mc cp 'flutter/build/rustdesk-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.zip' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/rustdesk-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.zip'
+          
