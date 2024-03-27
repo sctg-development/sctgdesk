@@ -534,8 +534,6 @@ def build_ios_ipa(version, features):
             <key>teamID</key>
             <string>{teamID}</string>
             <key>provisioningProfiles</key>
-            <dict>
-            <key>com.sctg.sctgdesk-ios</key>
         </dict>
         </plist>
         '''
