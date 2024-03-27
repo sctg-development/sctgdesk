@@ -1463,7 +1463,7 @@ jobs:
           ./mc cp 'flutter/build/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.zip' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.zip'
 
       - name: Publish to Cloudflare Pages
-        uses: cloudflare/pages-action@1
+        uses: sctg-development/pages-action-without-url@main
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
