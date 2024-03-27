@@ -45,6 +45,7 @@ env:
   APP_NAME_LOW: '${{ secrets.APP_NAME_LOW }}'
   MACOS_CODESIGN_IDENTITY: "${{ secrets.MACOS_CODESIGN_IDENTITY }}"
   MACOS_P12_BASE64: '${{ secrets.MACOS_P12_BASE64 }}'
+  MACOS2_P12_BASE64: '${{ secrets.MACOS2_P12_BASE64 }}'
   # To make a custom build with your own servers set the below secret values
   RS_PUB_KEY: '${{ secrets.RS_PUB_KEY }}'
   RENDEZVOUS_SERVER: '${{ secrets.RENDEZVOUS_SERVER }}'
@@ -469,11 +470,21 @@ jobs:
           keychain: rustdesk
           keychain-password: ${{ secrets.MACOS_P12_PASSWORD }}
 
+      - name: Import the second codesign cert
+        if: env.MACOS2_P12_BASE64 != null
+        uses: apple-actions/import-codesign-certs@v2
+        with:
+          p12-file-base64: ${{ secrets.MACOS2_P12_BASE64 }}
+          p12-password: ${{ secrets.MACOS_P12_PASSWORD }}
+          keychain: rustdesk
+          keychain-password: ${{ secrets.MACOS_P12_PASSWORD }}
+
       - name: Check sign and import sign key
         if: env.MACOS_P12_BASE64 != null
         run: |
           security default-keychain -s rustdesk.keychain
           security find-identity -v
+
       - name: Install flutter
         uses: subosito/flutter-action@v2
         with:
@@ -525,9 +536,9 @@ jobs:
           echo 'pushd ios' >> build-ios.sh
           echo 'pod install' >> build-ios.sh
           echo 'popd' >> build-ios.sh
+          echo 'mc alias set s3release https://${{ secrets.AWS_S3_ENDPOINT }} "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"' >> build-ios.sh
           echo 'xcrun xcodebuild archive -scheme Runner -workspace ios/Runner.xcworkspace -configuration Release -archivePath ./build/ios/iphoneos/Runner.xcarchive' >> build-ios.sh
           echo 'xcrun xcodebuild -exportArchive -archivePath ./build/ios/iphoneos/Runner.xcarchive -exportOptionsPlist ios/exportOptions.plist -exportPath ./build/ios/iphoneos/' >> build-ios.sh
-          echo 'mc alias set s3release https://${{ secrets.AWS_S3_ENDPOINT }} "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"' >> build-ios.sh
           echo 'mc cp ./build/ios/iphoneos/${{ env.APP_NAME }}.ipa s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-build/${{ env.APP_NAME }}-${{ env.VERSION }}.ipa' >> build-ios.sh
           chmod +x build-ios.sh
           tar czf ios-build.tar.gz ./flutter/build build-ios.sh
@@ -542,8 +553,17 @@ jobs:
           echo "./mc cp ios-build.tar.gz s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-build/ios-build.tar.gz"
           ./mc cp ios-build.tar.gz s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-build/ios-build.tar.gz
   
+      - name: Install Provisioning Profile
+        run: |
+          echo "Decoding provisioning profile..."
+          echo "${{ secrets.MOBILE_PROVISION_PROFILE }}" | base64 --decode > profile.mobileprovision
+          echo "Installing provisioning profile..."
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+
       - name: Build IPA
         run: |
+          export PATH=.:$PATH
           ./build-ios.sh
 
       # - name: Upload Artifacts
