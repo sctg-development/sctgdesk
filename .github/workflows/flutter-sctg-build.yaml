@@ -492,8 +492,9 @@ jobs:
             echo "Installing provisioning profile..."
             mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
             cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
-            security cms -D -i  ~/Library/MobileDevice/Provisioning\ Profiles\profile.mobileprovision
+            security cms -D -i  ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
             echo "Provisioning profile installed."
+
       - name: Install flutter
         uses: subosito/flutter-action@v2
         with:
