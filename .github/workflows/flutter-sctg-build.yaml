@@ -500,7 +500,6 @@ jobs:
           echo "Installing provisioning profile..."
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
-          security cms -D -i  ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
           ./mc cp --recursive "s3release/master/apple-provisioning/" ~/Library/MobileDevice/Provisioning\ Profiles/
           ls -l ~/Library/MobileDevice/Provisioning\ Profiles/
           echo "Provisioning profiles installed."
@@ -552,6 +551,7 @@ jobs:
 
       - name: Create archive tarball
         run: |
+          cat flutter/ios/exportOptions.plist
           echo 'cd flutter' > build-ios.sh
           echo 'pushd ios' >> build-ios.sh
           echo 'pod install' >> build-ios.sh
@@ -1234,9 +1234,9 @@ jobs:
           echo "Current directory: $PWD"
           ls -l -R
           echo "./mc cp './appimage/rustdesk-${{ env.VERSION }}-${{ matrix.job.os }}.AppImage' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.os }}.AppImage'"
-          ./mc cp '/opt/artifacts/rpm/rustdesk-${{ env.VERSION }}-${{ matrix.job.os }}-suse.rpm' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.os }}-suse.rpm'
-          ./mc cp '/opt/artifacts/rpm/rustdesk-${{ env.VERSION }}-${{ matrix.job.os }}.rpm' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.os }}.rpm'
           ./mc cp './appimage/rustdesk-${{ env.VERSION }}-${{ matrix.job.os }}.AppImage' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.os }}.AppImage'
+          ./mc cp '/opt/artifacts/rpm/rustdesk-${{ env.VERSION }}-0-${{ matrix.job.os }}-suse.rpm' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.os }}-suse.rpm'
+          ./mc cp '/opt/artifacts/rpm/rustdesk-${{ env.VERSION }}-0-${{ matrix.job.os }}.rpm' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.os }}.rpm'
         
       # - name: Publish appimage package
       #   if: matrix.job.extra-build-features == 'appimage' && env.UPLOAD_ARTIFACT == 'true'
