@@ -1453,6 +1453,15 @@ jobs:
           ./mc cp 'flutter/build/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.tar.gz' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.tar.gz'
           ./mc cp 'flutter/build/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.zip' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.zip'
 
+      - name: Publish to Cloudflare Pages
+        uses: cloudflare/pages-action@1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: ${{ secrets.CLOUDFLARE_PROJECT_NAME }}
+          directory: flutter/build/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ env.RELEASE_NAME }} # e.g. 'dist'
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
   build-rustdesk-web:
     name: build-rustdesk-web
     runs-on: ubuntu-20.04
@@ -1520,4 +1529,4 @@ jobs:
           echo "Copying flutter/build/rustdesk-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.tar.gz to s3"
           echo "./mc cp 'flutter/build/rustdesk-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.tar.gz' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/rustdesk-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.tar.gz'"
           ./mc cp 'flutter/build/rustdesk-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.tar.gz' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/rustdesk-${{ env.VERSION }}-${{ env.RELEASE_NAME }}.tar.gz'
-          
+        
