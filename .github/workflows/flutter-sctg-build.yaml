@@ -26,7 +26,7 @@ on:
 env:
   CARGO_NDK_VERSION: "3.1.2"
   LLVM_VERSION: "15.0.6"
-  FLUTTER_VERSION: "3.16.9"
+  FLUTTER_VERSION: "3.19.4"
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
   # for arm64 linux because official Dart SDK does not work
   FLUTTER_ELINUX_VERSION: "3.16.9"
@@ -186,9 +186,9 @@ jobs:
           pip3 install requests argparse
           BASE_URL=${{ secrets.SIGN_BASE_URL }} SECRET_KEY=${{ secrets.SIGN_SECRET_KEY }} python3 res/job.py sign_files ./rustdesk/
 
-      - name: Create tarball
+      - name: Create tarball with windows build
         if: env.BACKUP_BUILD_WINDOWS == 'true'
-        run: tar czf windows-build.tar.gz ./flutter/build/windows
+        run: tar czf windows-build.tar.gz ./flutter/build/windows target/release
         shell: bash
 
       - name: Backup Windows build to S3
@@ -518,7 +518,7 @@ jobs:
           ./build-sctg.py --flutter --ios
 
       - name: Create archive tarball
-        run: tar czf ios-build.tar.gz ./flutter/build/ios/iphoneos/Runner.xcarchive ./ExportOptions.plist ./flutter/ios/Runner.xcworkspace ./flutter/ios/Runner.xcodeproj
+        run: tar czf ios-build.tar.gz ./flutter/build
         shell: bash
 
       - name: Download, install mc and copy ios tarball to S3
