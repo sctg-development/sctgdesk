@@ -485,7 +485,15 @@ jobs:
         run: |
           security default-keychain -s rustdesk.keychain
           security find-identity -v
-
+          - name: Install Provisioning Profile
+          run: |
+            echo "Decoding provisioning profile..."
+            echo "${{ secrets.MOBILE_PROVISION_PROFILE }}" | base64 --decode > profile.mobileprovision
+            echo "Installing provisioning profile..."
+            mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+            cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+            security cms -D -i  ~/Library/MobileDevice/Provisioning\ Profiles\profile.mobileprovision
+            echo "Provisioning profile installed."
       - name: Install flutter
         uses: subosito/flutter-action@v2
         with:
@@ -553,14 +561,6 @@ jobs:
           echo "Copying ios-build.tar.gz to s3"
           echo "./mc cp ios-build.tar.gz s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-build/ios-build.tar.gz"
           ./mc cp ios-build.tar.gz s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-build/ios-build.tar.gz
-  
-      - name: Install Provisioning Profile
-        run: |
-          echo "Decoding provisioning profile..."
-          echo "${{ secrets.MOBILE_PROVISION_PROFILE }}" | base64 --decode > profile.mobileprovision
-          echo "Installing provisioning profile..."
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
 
       - name: Build IPA
         run: |
