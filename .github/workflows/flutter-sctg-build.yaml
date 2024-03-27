@@ -486,6 +486,13 @@ jobs:
           security default-keychain -s rustdesk.keychain
           security find-identity -v
 
+      - name: Congigure S3 client
+        run: |
+          curl -o mc https://dl.min.io/client/mc/release/darwin-amd64/mc
+          chmod +x mc
+          ./mc alias set s3release https://${{ secrets.AWS_S3_ENDPOINT }} "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+        shell: bash
+
       - name: Install Provisioning Profile
         run: |
           echo "Decoding provisioning profile..."
@@ -494,7 +501,9 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
           security cms -D -i  ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
-          echo "Provisioning profile installed."
+          mc cp s3release/master/apple-provisioning/* ~/Library/MobileDevice/Provisioning\ Profiles/
+          ls -l ~/Library/MobileDevice/Provisioning\ Profiles/
+          echo "Provisioning profiles installed."
 
       - name: Install flutter
         uses: subosito/flutter-action@v2
@@ -557,9 +566,6 @@ jobs:
 
       - name: Download, install mc and copy ios tarball to S3
         run: |
-          curl -o mc https://dl.min.io/client/mc/release/darwin-amd64/mc
-          chmod +x mc
-          ./mc alias set s3release https://${{ secrets.AWS_S3_ENDPOINT }} "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
           echo "Copying ios-build.tar.gz to s3"
           echo "./mc cp ios-build.tar.gz s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-build/ios-build.tar.gz"
           ./mc cp ios-build.tar.gz s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-build/ios-build.tar.gz
@@ -1226,10 +1232,10 @@ jobs:
         shell: bash
         run: |
           echo "Current directory: $PWD"
+          ls -l -R
           echo "./mc cp './appimage/rustdesk-${{ env.VERSION }}-${{ matrix.job.os }}.AppImage' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.os }}.AppImage'"
           ./mc cp '/opt/artifacts/rpm/rustdesk-${{ env.VERSION }}-${{ matrix.job.os }}-suse.rpm' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.os }}-suse.rpm'
           ./mc cp '/opt/artifacts/rpm/rustdesk-${{ env.VERSION }}-${{ matrix.job.os }}.rpm' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.os }}.rpm'
-          ls -l -R
           ./mc cp './appimage/rustdesk-${{ env.VERSION }}-${{ matrix.job.os }}.AppImage' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.os }}.AppImage'
         
       # - name: Publish appimage package
