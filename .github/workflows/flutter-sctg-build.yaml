@@ -485,15 +485,16 @@ jobs:
         run: |
           security default-keychain -s rustdesk.keychain
           security find-identity -v
-          - name: Install Provisioning Profile
-          run: |
-            echo "Decoding provisioning profile..."
-            echo "${{ secrets.MOBILE_PROVISION_PROFILE }}" | base64 --decode > profile.mobileprovision
-            echo "Installing provisioning profile..."
-            mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-            cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
-            security cms -D -i  ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
-            echo "Provisioning profile installed."
+
+      - name: Install Provisioning Profile
+        run: |
+          echo "Decoding provisioning profile..."
+          echo "${{ secrets.MOBILE_PROVISION_PROFILE }}" | base64 --decode > profile.mobileprovision
+          echo "Installing provisioning profile..."
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+          security cms -D -i  ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+          echo "Provisioning profile installed."
 
       - name: Install flutter
         uses: subosito/flutter-action@v2
