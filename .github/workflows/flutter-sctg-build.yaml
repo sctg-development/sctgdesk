@@ -629,14 +629,12 @@ jobs:
                clang \
                cmake \
                curl \
-               gcc-multilib \
                git \
                g++ \
-               g++-multilib \
                libappindicator3-dev \
                libasound2-dev \
                libc6-dev \
-               libclang-10-dev \
+               libclang-dev \
                libclang-dev \
                libgstreamer1.0-dev \
                libgstreamer-plugins-base1.0-dev \
@@ -650,7 +648,6 @@ jobs:
                libxcb-xfixes0-dev \
                libxdo-dev \
                libxfixes-dev \
-               llvm-10-dev \
                llvm-dev \
                nasm \
                ninja-build \
