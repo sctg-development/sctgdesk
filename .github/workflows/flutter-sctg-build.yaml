@@ -55,6 +55,7 @@ env:
   BUILD_ANDROID: "false"
   BUILD_IOS: "true"
   BUILD_WINDOWS_SCITER: "false"
+  BACKUP_BUILD_WINDOWS: "true"
 
 jobs:
   build-RustDeskTempTopMostWindow:
@@ -185,6 +186,21 @@ jobs:
           pip3 install requests argparse
           BASE_URL=${{ secrets.SIGN_BASE_URL }} SECRET_KEY=${{ secrets.SIGN_SECRET_KEY }} python3 res/job.py sign_files ./rustdesk/
 
+      - name: Create tarball
+        if: env.BACKUP_BUILD_WINDOWS == 'true'
+        run: tar czf windows-builld.tar.gz ./flutter/build/windows
+        shell: bash
+
+      - name: Backup Windows build to S3
+        if: env.BACKUP_BUILD_WINDOWS == 'true'
+        run: |
+          curl -o mc.exe https://dl.min.io/client/mc/release/windows-amd64/mc.exe
+          .\mc.exe alias set s3release https://${{ secrets.AWS_S3_ENDPOINT }} "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+          $command = ".\mc.exe cp ./windows-builld.tar.gz s3release\${{ secrets.AWS_S3_BUCKET }}\${{ env.APP_NAME_LOW }}-build\"
+          Write-Host $command
+          Invoke-Expression $command
+
+        shell: powershell
       - name: Build self-extracted executable
         shell: bash
         if: env.UPLOAD_ARTIFACT == 'true'
