@@ -188,7 +188,7 @@ jobs:
 
       - name: Create tarball
         if: env.BACKUP_BUILD_WINDOWS == 'true'
-        run: tar czf windows-builld.tar.gz ./flutter/build/windows
+        run: tar czf windows-build.tar.gz ./flutter/build/windows
         shell: bash
 
       - name: Backup Windows build to S3
@@ -196,7 +196,7 @@ jobs:
         run: |
           curl -o mc.exe https://dl.min.io/client/mc/release/windows-amd64/mc.exe
           .\mc.exe alias set s3release https://${{ secrets.AWS_S3_ENDPOINT }} "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-          $command = ".\mc.exe cp ./windows-builld.tar.gz s3release\${{ secrets.AWS_S3_BUCKET }}\${{ env.APP_NAME_LOW }}-build\"
+          $command = ".\mc.exe cp ./windows-build.tar.gz s3release\${{ secrets.AWS_S3_BUCKET }}\${{ env.APP_NAME_LOW }}-build\"
           Write-Host $command
           Invoke-Expression $command
 
@@ -253,8 +253,8 @@ jobs:
 
       - name: Download, install mc and copy file to S3
         run: |
-          curl -o mc.exe https://dl.min.io/client/mc/release/windows-amd64/mc.exe
-          .\mc.exe alias set s3release https://${{ secrets.AWS_S3_ENDPOINT }} "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+          # curl -o mc.exe https://dl.min.io/client/mc/release/windows-amd64/mc.exe
+          # .\mc.exe alias set s3release https://${{ secrets.AWS_S3_ENDPOINT }} "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
           $command = ".\mc.exe cp .\SignOutput\${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.exe s3release\${{ secrets.AWS_S3_BUCKET }}\${{ env.APP_NAME_LOW }}-releases\"
           Write-Host $command
           Invoke-Expression $command
@@ -517,14 +517,18 @@ jobs:
           security unlock-keychain -p ${{ secrets.MACOS_P12_PASSWORD }} rustdesk.keychain
           ./build-sctg.py --flutter --ios
 
-      - name: Download, install mc and copy file to S3
+      - name: Create archive tarball
+        run: tar czf ios-build.tar.gz ./flutter/build/ios/iphoneos/Runner.xcarchive ./ExportOptions.plist ./flutter/ios/Runner.xcworkspace ./flutter/ios/Runner.xcodeproj
+        shell: bash
+
+      - name: Download, install mc and copy ios tarball to S3
         run: |
           curl -o mc https://dl.min.io/client/mc/release/darwin-amd64/mc
           chmod +x mc
           ./mc alias set s3release https://${{ secrets.AWS_S3_ENDPOINT }} "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-          echo "Copying ${{ env.APP_NAME }}-${{ env.VERSION }}.ipa to s3"
-          echo "./mc cp flutter/build/ios/iphoneos/${{ env.APP_NAME }}.ipa s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME }}-${{ env.VERSION }}.ipa"
-          ./mc cp flutter/build/ios/iphoneos/${{ env.APP_NAME }}.ipa s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME }}-${{ env.VERSION }}.ipa
+          echo "Copying ios-build.tar.gz to s3"
+          echo "./mc cp ios-build.tar.gz s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-build/ios-build.tar.gz"
+          ./mc cp ios-build.tar.gz s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-build/ios-build.tar.gz
   
       # - name: Upload Artifacts
       #   # if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'

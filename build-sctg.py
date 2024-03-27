@@ -527,13 +527,16 @@ def build_ios_ipa(version, features):
             <string>app-store</string>
             <key>teamID</key>
             <string>{teamID}</string>
+            <key>provisioningProfiles</key>
+            <dict>
+            <key>com.sctg.sctgdesk-ios</key>
         </dict>
         </plist>
         '''
         with open('ExportOptions.plist', 'w') as f:
             f.write(xml_content)
-        system2('xcrun xcodebuild archive -scheme Runner -workspace ios/Runner.xcworkspace -configuration Release -archivePath ./build/ios/iphoneos/Runner.xcarchive')
-        system2('xcrun xcodebuild -exportArchive -archivePath ./build/ios/iphoneos/Runner.xcarchive -exportOptionsPlist ../ExportOptions.plist -exportPath ./build/ios/iphoneos/')
+        system2("echo 'xcrun xcodebuild archive -scheme Runner -workspace ios/Runner.xcworkspace -configuration Release -archivePath ./build/ios/iphoneos/Runner.xcarchive'")
+        system2("echo 'xcrun xcodebuild -exportArchive -archivePath ./build/ios/iphoneos/Runner.xcarchive -exportOptionsPlist ../ExportOptions.plist -exportPath ./build/ios/iphoneos/'")
     os.chdir('..')
 
 def build_flutter_dmg(version, features):
