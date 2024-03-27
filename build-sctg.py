@@ -543,8 +543,6 @@ def build_ios_ipa(version, features):
             f.write(xml_content)
         with open('ios/exportOptions.plist', 'w') as f:
             f.write(xml_content)
-        system2("echo 'xcrun xcodebuild archive -scheme Runner -workspace ios/Runner.xcworkspace -configuration Release -archivePath ./build/ios/iphoneos/Runner.xcarchive'")
-        system2("echo 'xcrun xcodebuild -exportArchive -archivePath ./build/ios/iphoneos/Runner.xcarchive -exportOptionsPlist ../ExportOptions.plist -exportPath ./build/ios/iphoneos/'")
     os.chdir('..')
 
 def build_flutter_dmg(version, features):
