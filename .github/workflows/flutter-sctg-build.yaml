@@ -486,7 +486,7 @@ jobs:
           security default-keychain -s rustdesk.keychain
           security find-identity -v
 
-      - name: Congigure S3 client
+      - name: Configure S3 client
         run: |
           curl -o mc https://dl.min.io/client/mc/release/darwin-amd64/mc
           chmod +x mc
@@ -501,7 +501,7 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
           security cms -D -i  ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
-          mc cp s3release/master/apple-provisioning/* ~/Library/MobileDevice/Provisioning\ Profiles/
+          ./mc cp s3release/master/apple-provisioning/* ~/Library/MobileDevice/Provisioning\ Profiles/
           ls -l ~/Library/MobileDevice/Provisioning\ Profiles/
           echo "Provisioning profiles installed."
 
