@@ -522,10 +522,14 @@ jobs:
       - name: Create archive tarball
         run: |
           echo 'cd flutter' > build-ios.sh
+          echo 'pushd ios' >> build-ios.sh
+          echo 'pod install' >> build-ios.sh
+          echo 'popd' >> build-ios.sh
           echo 'xcrun xcodebuild archive -scheme Runner -workspace ios/Runner.xcworkspace -configuration Release -archivePath ./build/ios/iphoneos/Runner.xcarchive' >> build-ios.sh
           echo 'xcrun xcodebuild -exportArchive -archivePath ./build/ios/iphoneos/Runner.xcarchive -exportOptionsPlist ios/exportOptions.plist -exportPath ./build/ios/iphoneos/' >> build-ios.sh
           echo 'mc alias set s3release https://${{ secrets.AWS_S3_ENDPOINT }} "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"' >> build-ios.sh
-          echo 'mc cp ./build/ios/iphoneos/Runner.ipa s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-build/Runner.ipa' >> build-ios.sh
+          echo 'mc cp ./build/ios/iphoneos/${{ env.APP_NAME }}.ipa s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-build/${{ env.APP_NAME }}-${{ env.VERSION }}.ipa' >> build-ios.sh
+          chmod +x build-ios.sh
           tar czf ios-build.tar.gz ./flutter/build build-ios.sh
         shell: bash
 
@@ -538,6 +542,10 @@ jobs:
           echo "./mc cp ios-build.tar.gz s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-build/ios-build.tar.gz"
           ./mc cp ios-build.tar.gz s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-build/ios-build.tar.gz
   
+      - name: Build IPA
+        run: |
+          ./build-ios.sh
+
       # - name: Upload Artifacts
       #   # if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'
       #   uses: actions/upload-artifact@master
@@ -1196,9 +1204,10 @@ jobs:
         run: |
           echo "Current directory: $PWD"
           echo "./mc cp './appimage/rustdesk-${{ env.VERSION }}-${{ matrix.job.os }}.AppImage' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.os }}.AppImage'"
-          ./mc cp './appimage/rustdesk-${{ env.VERSION }}-${{ matrix.job.os }}.AppImage' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.os }}.AppImage'
           ./mc cp '/opt/artifacts/rpm/rustdesk-${{ env.VERSION }}-${{ matrix.job.os }}-suse.rpm' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.os }}-suse.rpm'
           ./mc cp '/opt/artifacts/rpm/rustdesk-${{ env.VERSION }}-${{ matrix.job.os }}.rpm' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.os }}.rpm'
+          ls -l -R
+          ./mc cp './appimage/rustdesk-${{ env.VERSION }}-${{ matrix.job.os }}.AppImage' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.os }}.AppImage'
         
       # - name: Publish appimage package
       #   if: matrix.job.extra-build-features == 'appimage' && env.UPLOAD_ARTIFACT == 'true'
