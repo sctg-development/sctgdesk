@@ -556,10 +556,10 @@ jobs:
           echo 'pushd ios' >> build-ios.sh
           echo 'pod install' >> build-ios.sh
           echo 'popd' >> build-ios.sh
-          echo 'mc alias set s3release https://${{ secrets.AWS_S3_ENDPOINT }} "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"' >> build-ios.sh
+          echo './mc alias set s3release https://${{ secrets.AWS_S3_ENDPOINT }} "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"' >> build-ios.sh
           echo 'xcrun xcodebuild archive -scheme Runner -workspace ios/Runner.xcworkspace -configuration Release -archivePath ./build/ios/iphoneos/Runner.xcarchive' >> build-ios.sh
           echo 'xcrun xcodebuild -exportArchive -archivePath ./build/ios/iphoneos/Runner.xcarchive -exportOptionsPlist ios/exportOptions.plist -exportPath ./build/ios/iphoneos/' >> build-ios.sh
-          echo 'mc cp ./build/ios/iphoneos/${{ env.APP_NAME }}.ipa s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-build/${{ env.APP_NAME }}-${{ env.VERSION }}.ipa' >> build-ios.sh
+          echo './mc cp ./build/ios/iphoneos/${{ env.APP_NAME }}.ipa s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-build/${{ env.APP_NAME }}-${{ env.VERSION }}.ipa' >> build-ios.sh
           chmod +x build-ios.sh
           tar czf ios-build.tar.gz ./flutter/build build-ios.sh
         shell: bash
@@ -572,7 +572,6 @@ jobs:
 
       - name: Build IPA
         run: |
-          export PATH=.:$PATH
           ./build-ios.sh
 
       # - name: Upload Artifacts
@@ -594,7 +593,7 @@ jobs:
   build-rustdesk-android:
     needs: [generate-bridge-linux]
     name: build rustdesk android apk ${{ matrix.job.target }} (${{ matrix.job.os }}) [${{ matrix.job.extra-build-features }}]
-    runs-on: ${{ matrix.job.os }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -615,7 +614,7 @@ jobs:
             }
     steps:
       - name: Check if BUILD_ANDROID is true
-        run: if [[ "${{ env.BUILD_ANDROID }}" != "true" ]]; then exit 1; fi
+        run: if [[ "${{ env.BUILD_ANDROID }}" != "true" ]]; then exit 0; fi
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@v6
         with:
