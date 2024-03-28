@@ -989,8 +989,8 @@ jobs:
         uses: actions/upload-artifact@master
         if: ${{ contains(matrix.job.extra-build-features, 'flatpak') }}
         with:
-          name: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb
-          path: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb
+          name: ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.deb
+          path: ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.deb
 
       - name: Patch archlinux PKGBUILD
         if: ${{ matrix.job.extra-build-features == '' }}
@@ -1188,7 +1188,7 @@ jobs:
       - name: Download Binary
         uses: actions/download-artifact@master
         with:
-          name: rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.deb
+          name: ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.deb
           path: .
 
       - name: Rename Binary
