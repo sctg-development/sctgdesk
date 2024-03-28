@@ -574,7 +574,7 @@ jobs:
 
       - name: Build IPA
         run: |
-          cd flutter/ios
+          pushd flutter/ios
           pod install
           popd
           pushd flutter
