@@ -1029,8 +1029,11 @@ jobs:
           ls -l
           echo "./mc cp './appimage/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.AppImage' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.AppImage'"
           ./mc cp './appimage/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.AppImage' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.AppImage'
-          ./mc cp '/opt/artifacts/rpm/rustdesk-${{ env.VERSION }}-0-${{ matrix.job.arch }}-suse.rpm' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}-suse.rpm'
-          ./mc cp '/opt/artifacts/rpm/rustdesk-${{ env.VERSION }}-0-${{ matrix.job.arch }}.rpm' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.rpm'
+          ls -l /opt/artifacts/rpm/
+          echo "./mc cp '/opt/artifacts/rpm/rustdesk-${{ env.VERSION }}-0.${{ matrix.job.arch }}-suse.rpm' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-0.${{ matrix.job.arch }}-suse.rpm'"
+          echo "./mc cp '/opt/artifacts/rpm/rustdesk-${{ env.VERSION }}-0.${{ matrix.job.arch }}.rpm' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-0.${{ matrix.job.arch }}.rpm'"
+          ./mc cp '/opt/artifacts/rpm/rustdesk-${{ env.VERSION }}-0.${{ matrix.job.arch }}-suse.rpm' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-0.${{ matrix.job.arch }}-suse.rpm'
+          ./mc cp '/opt/artifacts/rpm/rustdesk-${{ env.VERSION }}-0.${{ matrix.job.arch }}.rpm' 's3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-releases/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-0.${{ matrix.job.arch }}.rpm'
         
       # - name: Publish appimage package
       #   if: matrix.job.extra-build-features == 'appimage' && env.UPLOAD_ARTIFACT == 'true'
