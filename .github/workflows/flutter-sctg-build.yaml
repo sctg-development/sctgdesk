@@ -1238,6 +1238,8 @@ jobs:
             # package
             pushd flatpak
             git clone https://github.com/flathub/shared-modules.git --depth=1
+            # Replace rustesk- in rustdesk.json with ${{ env.APP_NAME_LOW }}-
+            sed -i "s/rustdesk-/${{ env.APP_NAME_LOW }}-/g" rustdesk.json
             flatpak-builder --user --force-clean --repo=repo ./build ./rustdesk.json
             flatpak build-bundle ./repo ${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.flatpak com.${{ env.APP_NAME_LOW }}.${{ env.APP_NAME }}
 
