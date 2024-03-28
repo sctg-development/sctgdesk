@@ -114,6 +114,11 @@ def make_parser():
     parser.add_argument('--flutter', action='store_true',
                         help='Build flutter package', default=False)
     parser.add_argument(
+        '--quic',
+        action='store_true',
+        help='Enable feature Quic'
+    )
+    parser.add_argument(
         '--hwcodec',
         action='store_true',
         help='Enable feature hwcodec' + (
@@ -292,6 +297,8 @@ def external_resources(flutter, args, res_dir):
 
 def get_features(args):
     features = ['inline'] if not args.flutter else []
+    if args.quic:
+        features.append('quic')
     if args.hwcodec:
         features.append('hwcodec')
     if args.gpucodec:
@@ -484,6 +491,7 @@ def sctgdesk_customization():
     replace_in_file('flutter/web/js/src/connection.ts', 'uri = tmp[0] + ":" + (port + (isRelay ? roffset || 3 : 2));','uri = tmp[0] + ":" + (PORT + (isRelay ? 3 : 2));')
     replace_in_file('flutter/web/js/src/connection.ts', 'ws://', 'wss://')
     replace_in_file('libs/portable/generate.py', 'rustdesk.exe', f'.{APP_NAME}.exe'.lower())
+    replace_in_file('flatpak/rustdesk.json', 'rustdesk-', f'{APP_NAME}-'.lower())
     replace_in_all_typed_files('ts', 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', RS_PUB_KEY)
     replace_in_all_typed_files('ts', 'rs-ny.rustdesk.com', RENDEZVOUS_SERVER)
     replace_in_all_typed_files('ts', 'rs-sg.rustdesk.com', RENDEZVOUS_SERVER)
