@@ -46,6 +46,7 @@ env:
   MACOS_CODESIGN_IDENTITY: "${{ secrets.MACOS_CODESIGN_IDENTITY }}"
   MACOS_P12_BASE64: '${{ secrets.MACOS_P12_BASE64 }}'
   MACOS2_P12_BASE64: '${{ secrets.MACOS2_P12_BASE64 }}'
+  MACOS3_P12_BASE64: '${{ secrets.MACOS3_P12_BASE64 }}'
   # To make a custom build with your own servers set the below secret values
   RS_PUB_KEY: '${{ secrets.RS_PUB_KEY }}'
   RENDEZVOUS_SERVER: '${{ secrets.RENDEZVOUS_SERVER }}'
@@ -477,6 +478,16 @@ jobs:
         uses: apple-actions/import-codesign-certs@v2
         with:
           p12-file-base64: ${{ secrets.MACOS2_P12_BASE64 }}
+          p12-password: ${{ secrets.MACOS_P12_PASSWORD }}
+          keychain: rustdesk
+          create-keychain: false
+          keychain-password: ${{ secrets.MACOS_P12_PASSWORD }}
+
+      - name: Import the third codesign cert
+        if: env.MACOS3_P12_BASE64 != null
+        uses: apple-actions/import-codesign-certs@v2
+        with:
+          p12-file-base64: ${{ secrets.MACOS3_P12_BASE64 }}
           p12-password: ${{ secrets.MACOS_P12_PASSWORD }}
           keychain: rustdesk
           create-keychain: false
