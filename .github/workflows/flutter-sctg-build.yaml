@@ -1178,6 +1178,12 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
+      
+      - name: List artifacts
+        run: |
+          curl -H "Accept: application/vnd.github.v3+json" \
+                -H "Authorization: token YOUR_GITHUB_TOKEN" \
+                https://api.github.com/repos/sctg-development/sctgdesk/actions/runs/${{ github.run_id }}/artifacts | jq '.artifacts[] | .name'
 
       - name: Download Binary
         uses: actions/download-artifact@master
