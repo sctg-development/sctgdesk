@@ -516,6 +516,8 @@ def sctgdesk_customization():
 
 def build_ios_ipa(version, features):
     MACOS_CODESIGN_IDENTITY = os.environ.get('MACOS_CODESIGN_IDENTITY')
+    IOS_BUNDLE_ID = os.environ.get('IOS_BUNDLE_ID')
+    IOS_DISTRIBUTION_PROFILE = os.environ.get('IOS_DISTRIBUTION_PROFILE')
     if not skip_cargo:
         system2(f'cargo build --features flutter --release --target aarch64-apple-ios --lib')
     os.chdir('flutter')
@@ -534,6 +536,10 @@ def build_ios_ipa(version, features):
             <key>teamID</key>
             <string>{teamID}</string>
             <key>provisioningProfiles</key>
+            <dict>
+                <key>{IOS_BUNDLE_ID}</key>
+                <string>{IOS_DISTRIBUTION_PROFILE}</string>
+            </dict>
         </dict>
         </plist>
         '''
