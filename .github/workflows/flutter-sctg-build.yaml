@@ -571,11 +571,43 @@ jobs:
           echo "Copying ios-build.tar.gz to s3"
           echo "./mc cp ios-build.tar.gz s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-build/ios-build.tar.gz"
           ./mc cp ios-build.tar.gz s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-build/ios-build.tar.gz
+          cat ios/exportOptions.plist || true
+          if [[ $MACOS_CODESIGN_IDENTITY =~ \(([A-Z0-9]+)\)$ ]]; then
+              teamID=${BASH_REMATCH[1]}
+              echo $teamID
+
+              xml_content="<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+              <!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+              <plist version=\"1.0\">
+              <dict>
+                  <key>method</key>
+                  <string>app-store</string>
+                  <key>teamID</key>
+                  <string>${teamID}</string>
+                  <key>provisioningProfiles</key>
+                  <dict>
+                      <key>${IOS_BUNDLE_ID}</key>
+                      <string>${IOS_DISTRIBUTION_PROFILE}</string>
+                  </dict>
+              </dict>
+              </plist>"
+
+              echo $xml_content > ExportOptions.plist
+              echo $xml_content > ios/exportOptions.plist
+          fi
+          cat ios/exportOptions.plist || true
+          xcrun xcodebuild -exportArchive -archivePath ./build/ios/iphoneos/Runner.xcarchive -exportOptionsPlist ios/exportOptions.plist -exportPath ./build/ios/iphoneos/
+          ../mc cp ./build/ios/iphoneos/${{ env.APP_NAME }}.ipa s3release/${{ secrets.AWS_S3_BUCKET }}/${{ env.APP_NAME_LOW }}-build/${{ env.APP_NAME }}-${{ env.VERSION }}.ipa
+
 
       - name: Build IPA
         run: |
-          cat flutter/ios/exportOptions.plist
-          ./build-ios.sh
+          cd flutter/ios
+          pop install
+          popd
+          pushd flutter
+          ../mc alias set s3release https://${{ secrets.AWS_S3_ENDPOINT }} "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+          xcrun xcodebuild archive -scheme Runner -workspace ios/Runner.xcworkspace -configuration Release -archivePath ./build/ios/iphoneos/Runner.xcarchive
 
       # - name: Upload Artifacts
       #   # if: env.ANDROID_SIGNING_KEY != null && env.UPLOAD_ARTIFACT == 'true'

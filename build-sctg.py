@@ -522,31 +522,6 @@ def build_ios_ipa(version, features):
         system2(f'cargo build --features flutter --release --target aarch64-apple-ios --lib')
     os.chdir('flutter')
     system2('flutter build ipa --release --no-codesign')
-    match = re.search(r'\(([A-Z0-9]+)\)$', MACOS_CODESIGN_IDENTITY)
-    if match:
-        key = match.group(1)
-        print(key)
-        teamID = key
-        xml_content = f'''<?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0">
-        <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>teamID</key>
-            <string>{teamID}</string>
-            <key>provisioningProfiles</key>
-            <dict>
-                <key>{IOS_BUNDLE_ID}</key>
-                <string>{IOS_DISTRIBUTION_PROFILE}</string>
-            </dict>
-        </dict>
-        </plist>
-        '''
-        with open('ExportOptions.plist', 'w') as f:
-            f.write(xml_content)
-        with open('ios/exportOptions.plist', 'w') as f:
-            f.write(xml_content)
     os.chdir('..')
 
 def build_flutter_dmg(version, features):
