@@ -386,9 +386,20 @@ impl RendezvousMediator {
         Ok(())
     }
 
+    pub fn is_udp_enabled() -> bool {
+        let option_tcp = Config::get_option("disable-udp-mode");
+        println!("disable-udp-mode: {}", option_tcp);
+        if option_tcp == "N"{
+            return true;
+        }else{
+            return false;
+        }
+    }
+
     pub async fn start(server: ServerPtr, host: String) -> ResultType<()> {
         log::info!("start rendezvous mediator of {}", host);
-        if cfg!(debug_assertions) && option_env!("TEST_TCP").is_some() {
+        if  Self::is_udp_enabled() {
+            log::info!("start rendezvous mediator in tcp mode");
             Self::start_tcp(server, host).await
         } else {
             Self::start_udp(server, host).await

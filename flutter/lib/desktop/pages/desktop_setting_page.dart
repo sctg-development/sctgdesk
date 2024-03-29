@@ -1173,6 +1173,8 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
                     apiController, apiErrMsg.value, enabled, secure)),
                 _LabeledTextField(
                     context, 'Key', keyController, '', enabled, secure),
+                _OptionCheckBox(context, 'UDP mode', 'disable-udp-mode',
+                    enabled: enabled),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [_Button('Apply', submit, enabled: enabled)],
