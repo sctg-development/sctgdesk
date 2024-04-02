@@ -202,17 +202,17 @@ jobs:
         run: |
           curl -o mc.exe https://dl.min.io/client/mc/release/windows-amd64/mc.exe
           .\mc.exe alias set s3release https://${{ secrets.AWS_S3_ENDPOINT }} "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-          $command = ".\mc.exe cp ./windows-build.tar.gz s3release\${{ secrets.AWS_S3_BUCKET }}\${{ env.APP_NAME_LOW }}-build\"
+          $command = ".\mc.exe cp ./windows-build.tar.gz s3release\${{ secrets.AWS_S3_BUCKET }}\${{ env.APP_NAME_LOW }}-build\windows-build-${{ matrix.job.arch }}.tar.gz"
           Write-Host $command
           Invoke-Expression $command
         shell: powershell
       
       - name: Extract signing certificate
         run: |
-          $pfxBase64 = "${{ secrets.MACOS_P12_BASE64 }}"
-          $pfxBytes = [System.Convert]::FromBase64String($pfxBase64)
-          Set-Content -Path ./certificate.pfx -Value $pfxBytes -AsByteStream
-        shell: powershell
+          export MACOS_P12_BASE64="${{ secrets.MACOS_P12_BASE64 }}"
+          echo "$MACOS_P12_BASE64" | base64 --decode > certificate.pfx
+          ls -l certificate.pfx
+        shell: bash
         
       - name: Sign rustdesk files
         run: |
