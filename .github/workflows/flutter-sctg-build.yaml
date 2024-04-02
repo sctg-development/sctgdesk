@@ -209,9 +209,9 @@ jobs:
       
       - name: Extract signing certificate
         run: |
-          $pfxBase64 = $env:MACOS_P12_BASE64
+          $pfxBase64 = "${{ secrets.MACOS_P12_BASE64 }}"
           $pfxBytes = [System.Convert]::FromBase64String($pfxBase64)
-          Set-Content -Path ./certificate.pfx -Value $pfxBytes -Encoding Byte
+          Set-Content -Path ./certificate.pfx -Value $pfxBytes -AsByteStream
         shell: powershell
         
       - name: Sign rustdesk files
