@@ -205,25 +205,39 @@ jobs:
           $command = ".\mc.exe cp ./windows-build.tar.gz s3release\${{ secrets.AWS_S3_BUCKET }}\${{ env.APP_NAME_LOW }}-build\"
           Write-Host $command
           Invoke-Expression $command
-
         shell: powershell
+      
+      - name: Extract signing certificate
+        run: |
+          $pfxBase64 = $env:MACOS_P12_BASE64
+          $pfxBytes = [System.Convert]::FromBase64String($pfxBase64)
+          Set-Content -Path ./certificate.pfx -Value $pfxBytes -Encoding Byte
+        shell: powershell
+        
+      - name: Sign rustdesk files
+        run: |
+          signtool sign /f ./certificate.pfx /p $env:MACOS_P12_PASSWORD ./rustdesk/*.exe
+          signtool sign /f ./certificate.pfx /p $env:MACOS_P12_PASSWORD ./rustdesk/*.dll
+        shell: powershell
+
       - name: Build self-extracted executable
         shell: bash
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
+          ls -l ./rustdesk
           pushd ./libs/portable
           pip3 install -r requirements.txt
-          python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/rustdesk.exe
+          mv ../../rustdesk/rustdesk.exe ../../rustdesk/SCTGDesk.exe
+          python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/SCTGDesk.exe
           popd
           mkdir -p ./SignOutput
           mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.exe
           mv ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.exe ./SignOutput/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.exe
 
       - name: Sign rustdesk self-extracted file
-        if: env.UPLOAD_ARTIFACT == 'true' && env.SIGN_BASE_URL != ''
-        shell: bash
+        shell: powershell
         run: |
-          BASE_URL=${{ secrets.SIGN_BASE_URL }} SECRET_KEY=${{ secrets.SIGN_SECRET_KEY }} python3 res/job.py sign_files ./SignOutput
+          signtool sign /f ./certificate.pfx /p $env:MACOS_P12_PASSWORD ./SignOutput/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.exe
 
       # - name: Publish Release
       #   uses: softprops/action-gh-release@v1
