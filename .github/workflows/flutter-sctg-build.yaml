@@ -197,12 +197,16 @@ jobs:
         run: tar czf windows-build.tar.gz ./flutter/build ./target/release
         shell: bash
 
-      - name: Backup Windows build to S3
-        if: env.BACKUP_BUILD_WINDOWS == 'true'
+      - name: Install Minio  MC
         run: |
           curl -o mc.exe https://dl.min.io/client/mc/release/windows-amd64/mc.exe
           .\mc.exe alias set s3release https://${{ secrets.AWS_S3_ENDPOINT }} "${{ secrets.AWS_ACCESS_KEY_ID }}" "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-          $command = ".\mc.exe cp ./windows-build.tar.gz s3release\${{ secrets.AWS_S3_BUCKET }}\${{ env.APP_NAME_LOW }}-build\windows-build-${{ matrix.job.arch }}.tar.gz"
+        shell: powershell
+        
+      - name: Backup Windows build to S3
+        if: env.BACKUP_BUILD_WINDOWS == 'true'
+        run: |
+         $command = ".\mc.exe cp ./windows-build.tar.gz s3release\${{ secrets.AWS_S3_BUCKET }}\${{ env.APP_NAME_LOW }}-build\windows-build-${{ matrix.job.arch }}.tar.gz"
           Write-Host $command
           Invoke-Expression $command
         shell: powershell
