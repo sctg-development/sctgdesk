@@ -211,14 +211,29 @@ jobs:
         run: |
           export MACOS_P12_BASE64="${{ secrets.MACOS_P12_BASE64 }}"
           echo "$MACOS_P12_BASE64" | base64 --decode > certificate.pfx
-          ls -l certificate.pfx
+          export MACOS2_P12_BASE64="${{ secrets.MACOS2_P12_BASE64 }}"
+          echo "$MACOS2_P12_BASE64" | base64 --decode > certificate2.pfx
+          export MACOS3_P12_BASE64="${{ secrets.MACOS3_P12_BASE64 }}"
+          echo "$MACOS3_P12_BASE64" | base64 --decode > certificate3.pfx
+          ls -l certificate*.pfx
         shell: bash
-        
+
+      - name: Add certificate
+        continue-on-error: true
+        run: |
+          $pfxpath = '.\certificate.pfx'
+          $pfxpath2 = '.\certificate2.pfx'
+          $pfxpath3 = '.\certificate3.pfx'
+          $password = '${{ secrets.MACOS_P12_PASSWORD }}'
+          Import-PfxCertificate -FilePath $pfxpath -CertStoreLocation Cert:\LocalMachine\My -Password (ConvertTo-SecureString -String $password -Force -AsPlainText)
+          Import-PfxCertificate -FilePath $pfxpath2 -CertStoreLocation Cert:\LocalMachine\My -Password (ConvertTo-SecureString -String $password -Force -AsPlainText)
+          Import-PfxCertificate -FilePath $pfxpath3 -CertStoreLocation Cert:\LocalMachine\My -Password (ConvertTo-SecureString -String $password -Force -AsPlainText)
+        shell: pwsh 
+
       - name: Sign rustdesk files
         run: |
-          echo "C:\Program Files (x86)\Windows Kits\10\bin\x64" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          signtool sign /f ./certificate.pfx /p $env:MACOS_P12_PASSWORD ./rustdesk/*.exe
-          signtool sign /f ./certificate.pfx /p $env:MACOS_P12_PASSWORD ./rustdesk/*.dll
+          signtool sign /f ./certificate.pfx /p ${{ secrets.MACOS_P12_PASSWORD }} ./rustdesk/*.exe
+          signtool sign /f ./certificate.pfx /p  ${{ secrets.MACOS_P12_PASSWORD }} ./rustdesk/*.dll
         shell: powershell
         continue-on-error: true
 
@@ -226,10 +241,10 @@ jobs:
         shell: bash
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
-          ls -l ./rustdesk
           pushd ./libs/portable
           pip3 install -r requirements.txt
           mv ../../rustdesk/rustdesk.exe ../../rustdesk/SCTGDesk.exe
+          ls -l ../../rustdesk
           python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/SCTGDesk.exe
           popd
           mkdir -p ./SignOutput
@@ -238,8 +253,9 @@ jobs:
 
       - name: Sign rustdesk self-extracted file
         shell: powershell
+        continue-on-error: true
         run: |
-          signtool sign /f ./certificate.pfx /p $env:MACOS_P12_PASSWORD ./SignOutput/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.exe
+          signtool sign /f ./certificate.pfx /p ${{ secrets.MACOS_P12_PASSWORD }}  ./SignOutput/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.exe
 
       # - name: Publish Release
       #   uses: softprops/action-gh-release@v1
