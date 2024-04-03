@@ -502,6 +502,8 @@ def sctgdesk_customization():
     replace_in_all_typed_files('js', 'rs-sg.rustdesk.com', RENDEZVOUS_SERVER)
     replace_in_all_typed_files('js', 'rs-cn.rustdesk.com', RENDEZVOUS_SERVER)
     replace_in_all_typed_files('js', 'rs-us.rustdesk.com', RENDEZVOUS_SERVER)
+    replace_in_all_typed_files('rc', 'RustDesk', f'{APP_NAME}')
+    replace_in_all_typed_files('rc', 'rustdesk', f'{APP_NAME}'.lower())
     replace_in_file('src/common.rs', 'https://admin.rustdesk.com', f'https://{API_SERVER}')
     replace_in_all_dart_files('RustDesk', f'{APP_NAME}')
     replace_in_all_rust_files('RustDesk', f'{APP_NAME}')

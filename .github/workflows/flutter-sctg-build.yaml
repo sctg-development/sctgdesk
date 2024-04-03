@@ -218,6 +218,10 @@ jobs:
           ls -l certificate*.pfx
         shell: bash
 
+      - name: Get SignTool location
+        uses: eltorio/action-signtoolLocation@main
+        id: signtoolLocation
+
       - name: Add certificate
         continue-on-error: true
         run: |
@@ -232,30 +236,8 @@ jobs:
 
       - name: Sign rustdesk files
         run: |
-            function Get-SigntoolLocation {
-              $windowsKitsfolder = 'C:\Program Files (x86)\Windows Kits\10\bin\'
-              $folders = Get-ChildItem -Path $windowsKitsfolder
-              $maxVersion = 0
-              $fileName = 'unable to find signtool.exe'
-              foreach ($folder in $folders) {
-                  if (!$folder.Name.EndsWith('.0')) {
-                      continue
-                  }
-                  $folderVersion = [int]$folder.Name.Replace('.', '')
-                  if ($folderVersion -gt $maxVersion) {
-                      $signtoolFilename = Join-Path -Path $windowsKitsfolder -ChildPath "$($folder.Name)\x64\signtool.exe"
-                      if (Test-Path -Path $signtoolFilename) {
-                          $fileName = $signtoolFilename
-                          $maxVersion = $folderVersion
-                      }
-                  }
-              }
-              # Write-Output "Signtool location is $fileName."
-              return $fileName
-            }
-            $signtoolLocation = Get-SigntoolLocation
-            & $signtoolLocation sign /fd SHA256 /f ./certificate.pfx /p ${{ secrets.MACOS_P12_PASSWORD }} ./rustdesk/*.exe
-            & $signtoolLocation sign /fd SHA256 /f ./certificate.pfx /p  ${{ secrets.MACOS_P12_PASSWORD }} ./rustdesk/*.dll
+            "${{ steps.signtoolLocation.outputs.signtoolLocation }}"  sign /tr http://timestamp.digicert.com /td sha256 /fd SHA256 /f ./certificate.pfx /p ${{ secrets.MACOS_P12_PASSWORD }} ./rustdesk/*.exe
+            "${{ steps.signtoolLocation.outputs.signtoolLocation }}"  sign /tr http://timestamp.digicert.com /td sha256 /fd SHA256 /f ./certificate.pfx /p  ${{ secrets.MACOS_P12_PASSWORD }} ./rustdesk/*.dll
         shell: powershell
         continue-on-error: true
 
@@ -277,7 +259,7 @@ jobs:
         shell: powershell
         continue-on-error: true
         run: |
-          signtool sign /f ./certificate.pfx /p ${{ secrets.MACOS_P12_PASSWORD }}  ./SignOutput/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.exe
+          "${{ steps.signtoolLocation.outputs.signtoolLocation }}" sign /tr http://timestamp.digicert.com /td sha256 /fd SHA256 /f ./certificate.pfx /p ${{ secrets.MACOS_P12_PASSWORD }}  ./SignOutput/*.exe
 
       # - name: Publish Release
       #   uses: softprops/action-gh-release@v1
