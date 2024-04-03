@@ -236,8 +236,8 @@ jobs:
 
       - name: Sign rustdesk files
         run: |
-            "${{ steps.signtoolLocation.outputs.signtoolLocation }}"  sign /tr http://timestamp.digicert.com /td sha256 /fd SHA256 /f ./certificate.pfx /p ${{ secrets.MACOS_P12_PASSWORD }} ./rustdesk/*.exe
-            "${{ steps.signtoolLocation.outputs.signtoolLocation }}"  sign /tr http://timestamp.digicert.com /td sha256 /fd SHA256 /f ./certificate.pfx /p  ${{ secrets.MACOS_P12_PASSWORD }} ./rustdesk/*.dll
+            &"${{ steps.signtoolLocation.outputs.signtoolLocation }}"  sign /tr http://timestamp.digicert.com /td sha256 /fd SHA256 /f ./certificate.pfx /p ${{ secrets.MACOS_P12_PASSWORD }} ./rustdesk/*.exe
+            &"${{ steps.signtoolLocation.outputs.signtoolLocation }}"  sign /tr http://timestamp.digicert.com /td sha256 /fd SHA256 /f ./certificate.pfx /p  ${{ secrets.MACOS_P12_PASSWORD }} ./rustdesk/*.dll
         shell: powershell
         continue-on-error: true
 
@@ -259,7 +259,7 @@ jobs:
         shell: powershell
         continue-on-error: true
         run: |
-          "${{ steps.signtoolLocation.outputs.signtoolLocation }}" sign /tr http://timestamp.digicert.com /td sha256 /fd SHA256 /f ./certificate.pfx /p ${{ secrets.MACOS_P12_PASSWORD }}  ./SignOutput/*.exe
+          &"${{ steps.signtoolLocation.outputs.signtoolLocation }}" sign /tr http://timestamp.digicert.com /td sha256 /fd SHA256 /f ./certificate.pfx /p ${{ secrets.MACOS_P12_PASSWORD }}  ./SignOutput/*.exe
 
       # - name: Publish Release
       #   uses: softprops/action-gh-release@v1
