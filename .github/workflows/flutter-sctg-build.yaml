@@ -254,8 +254,8 @@ jobs:
               return $fileName
             }
             $signtoolLocation = Get-SigntoolLocation
-            & $signtoolLocation sign /f ./certificate.pfx /p ${{ secrets.MACOS_P12_PASSWORD }} ./rustdesk/*.exe
-            & $signtoolLocation sign /f ./certificate.pfx /p  ${{ secrets.MACOS_P12_PASSWORD }} ./rustdesk/*.dll
+            & $signtoolLocation sign /fd SHA256 /f ./certificate.pfx /p ${{ secrets.MACOS_P12_PASSWORD }} ./rustdesk/*.exe
+            & $signtoolLocation sign /fd SHA256 /f ./certificate.pfx /p  ${{ secrets.MACOS_P12_PASSWORD }} ./rustdesk/*.dll
         shell: powershell
         continue-on-error: true
 
