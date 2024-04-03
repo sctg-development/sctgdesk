@@ -26,7 +26,7 @@ on:
 env:
   CARGO_NDK_VERSION: "3.1.2"
   LLVM_VERSION: "15.0.6"
-  FLUTTER_VERSION: "3.19.4"
+  FLUTTER_VERSION: "3.19.5"
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
   # for arm64 linux because official Dart SDK does not work
   FLUTTER_ELINUX_VERSION: "3.16.9"
@@ -57,7 +57,7 @@ env:
   BUILD_ANDROID: "false"
   BUILD_IOS: "true"
   BUILD_WINDOWS_SCITER: "false"
-  BACKUP_BUILD_WINDOWS: "true"
+  BACKUP_BUILD_WINDOWS: "false"
   IOS_BUNDLE_ID: ${{ secrets.IOS_BUNDLE_ID }}
   IOS_DISTRIBUTION_PROFILE: ${{ secrets.IOS_DISTRIBUTION_PROFILE }}
 
@@ -77,8 +77,8 @@ jobs:
     name: ${{ matrix.job.target }} (${{ matrix.job.os }})
     needs: [build-RustDeskTempTopMostWindow]
     runs-on: ${{ matrix.job.os }}
-    env:
-      FLUTTER_VERSION: "3.16.9"
+    # env:
+    #   FLUTTER_VERSION: "3.16.9"
     strategy:
       fail-fast: false
       matrix:
@@ -110,13 +110,13 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
-      - name: Replace engine with rustdesk custom flutter engine
-        run: |
-          flutter doctor -v
-          flutter precache --windows
-          Invoke-WebRequest -Uri https://github.com/fufesou/flutter-engine/releases/download/bugfix-subwindow-crash-3.16.9-apply-pull-47787/windows-x64-release.zip -OutFile windows-x64-flutter-release.zip
-          Expand-Archive windows-x64-flutter-release.zip -DestinationPath .
-          mv -Force windows-x64-release/*  C:/hostedtoolcache/windows/flutter/stable-${{ env.FLUTTER_VERSION }}-x64/bin/cache/artifacts/engine/windows-x64-release/
+      # - name: Replace engine with rustdesk custom flutter engine
+      #   run: |
+      #     flutter doctor -v
+      #     flutter precache --windows
+      #     Invoke-WebRequest -Uri https://github.com/fufesou/flutter-engine/releases/download/bugfix-subwindow-crash-3.16.9-apply-pull-47787/windows-x64-release.zip -OutFile windows-x64-flutter-release.zip
+      #     Expand-Archive windows-x64-flutter-release.zip -DestinationPath .
+      #     mv -Force windows-x64-release/*  C:/hostedtoolcache/windows/flutter/stable-${{ env.FLUTTER_VERSION }}-x64/bin/cache/artifacts/engine/windows-x64-release/
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@v1
@@ -260,38 +260,6 @@ jobs:
         continue-on-error: true
         run: |
           &"${{ steps.signtoolLocation.outputs.signtoolLocation }}" sign /tr http://timestamp.digicert.com /td sha256 /fd SHA256 /f ./certificate.pfx /p ${{ secrets.MACOS_P12_PASSWORD }}  ./SignOutput/*.exe
-
-      # - name: Publish Release
-      #   uses: softprops/action-gh-release@v1
-      #   if: env.UPLOAD_ARTIFACT == 'true'
-      #   with:
-      #     prerelease: true
-      #     tag_name: ${{ env.TAG_NAME }}
-      #     files: |
-      #       ./SignOutput/${{ env.APP_NAME_LOW }}-*.exe
-
-      # - name: Import PKCS12 certificate
-      #   run: |
-      #     $p12_base64 = "${{ secrets.MACOS_P12_BASE64 }}"
-      #     $p12_password = "${{ secrets.MACOS_P12_PASSWORD }}"
-      #     $p12_bytes = [System.Convert]::FromBase64String($p12_base64)
-      #     $collection = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2Collection
-      #     $collection.Import($p12_bytes, $p12_password, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::PersistKeySet)
-      #     $store = New-Object System.Security.Cryptography.X509Certificates.X509Store -ArgumentList "My", "CurrentUser"
-      #     $store.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
-      #     foreach ($cert in $collection) {
-      #         $store.Add($cert)
-      #     }
-      #     $store.Close()
-      #   shell: powershell
-
-      # - name: Sign executable
-      #   run: |
-      #     $subjectName = "${{ secrets.MACOS_CODESIGN_IDENTITY }}"
-      #     $timestampServerUrl = "http://timestamp.digicert.com"
-      #     $exePath = ".\SignOutput\${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ matrix.job.arch }}.exe"
-      #     & 'C:\Program Files (x86)\Windows Kits\10\bin\x64\signtool.exe' sign /n $subjectName /tr $timestampServerUrl /td SHA256 /fd SHA256 /v $exePath
-      #   shell: powershell
 
       - name: Download, install mc and copy file to S3
         run: |
