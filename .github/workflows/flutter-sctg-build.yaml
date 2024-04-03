@@ -232,8 +232,30 @@ jobs:
 
       - name: Sign rustdesk files
         run: |
-          signtool sign /f ./certificate.pfx /p ${{ secrets.MACOS_P12_PASSWORD }} ./rustdesk/*.exe
-          signtool sign /f ./certificate.pfx /p  ${{ secrets.MACOS_P12_PASSWORD }} ./rustdesk/*.dll
+            function Get-SigntoolLocation {
+              $windowsKitsfolder = 'C:\Program Files (x86)\Windows Kits\10\bin\'
+              $folders = Get-ChildItem -Path $windowsKitsfolder
+              $maxVersion = 0
+              $fileName = 'unable to find signtool.exe'
+              foreach ($folder in $folders) {
+                  if (!$folder.Name.EndsWith('.0')) {
+                      continue
+                  }
+                  $folderVersion = [int]$folder.Name.Replace('.', '')
+                  if ($folderVersion -gt $maxVersion) {
+                      $signtoolFilename = Join-Path -Path $windowsKitsfolder -ChildPath "$($folder.Name)\x64\signtool.exe"
+                      if (Test-Path -Path $signtoolFilename) {
+                          $fileName = $signtoolFilename
+                          $maxVersion = $folderVersion
+                      }
+                  }
+              }
+              # Write-Output "Signtool location is $fileName."
+              return $fileName
+            }
+            $signtoolLocation = Get-SigntoolLocation
+            & $signtoolLocation sign /f ./certificate.pfx /p ${{ secrets.MACOS_P12_PASSWORD }} ./rustdesk/*.exe
+            & $signtoolLocation sign /f ./certificate.pfx /p  ${{ secrets.MACOS_P12_PASSWORD }} ./rustdesk/*.dll
         shell: powershell
         continue-on-error: true
 
