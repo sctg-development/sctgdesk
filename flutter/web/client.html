@@ -56,6 +56,7 @@
         <div>
             <a id="windows64"><img class="logo-sub" src="images/windows.svg" alt="Logo Windows"></a>
             <a id="osx"><img class="logo-sub" src="images/apple.svg" alt="Logo Apple"></a>
+            <a id="ios"><img class="logo-sub" src="images/ios.svg" alt="Logo iOS"></a>
             <a id="globe" href="/sctgdesk.html"><img class="logo-sub" src="images/globe.svg" alt="Logo globe"></a>
         </div>
     </div>
@@ -72,6 +73,12 @@
             .then(response => response.json())
             .then(data => {
                 document.getElementById('osx').href = data.url;
+            });
+
+        fetch('__API_SERVER__/api/software/client-download-link/ios')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('ios').href = data.url;
             });
     };
 </script>
