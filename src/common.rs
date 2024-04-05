@@ -1301,8 +1301,10 @@ pub async fn secure_tcp(conn: &mut FramedStream, key: &str) -> ResultType<()> {
                             ..Default::default()
                         });
                         timeout(CONNECT_TIMEOUT, conn.send(&msg_out)).await??;
+                        let symetric_key: [u8; 32] = key.0.into();
                         conn.set_key(key);
                         log::info!("Connection secured");
+                        log::debug!("Symetric key is: {:?}", hex::encode(&symetric_key));
                     }
                     _ => {}
                 }

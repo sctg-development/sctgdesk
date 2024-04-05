@@ -18,3 +18,4 @@ data:
       Windows32Key: {{ .Values.api.s3.windows32_key }}
       OSXKey: {{ .Values.api.s3.osx_key }}
       OSXArm64Key: {{ .Values.api.s3.osx_arm64_key }}
+      IOSKey: {{ .Values.api.s3.ios_key }}

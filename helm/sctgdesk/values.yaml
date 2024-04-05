@@ -41,7 +41,7 @@ api:
     windows32_key: "windows32.exe"
     osx_key: "osx.dmg"
     osx_arm64_key: "osx_arm64.dmg"
-
+    ios_key: "ios.ipa"
 gateway:
   enabled: false
   gatewayClass: haproxy-gatewayclass
