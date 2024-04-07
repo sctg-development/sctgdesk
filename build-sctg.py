@@ -495,6 +495,8 @@ def sctgdesk_customization():
     replace_in_file('flatpak/rustdesk.json', 'rustdesk-', f'{APP_NAME}-'.lower())
     replace_in_file('flutter/lib/desktop/pages/desktop_setting_page.dart', 'https://rustdesk.com', f'https://{ORG_NAME}.eu.org'.lower())
     replace_in_file('flutter/lib/desktop/pages/desktop_setting_page.dart', 'Purslane Ltd.', f'{ORG_NAME_CAPITALIZED} and Purslane Ltd.')
+    replace_in_file('flutter/lib/mobile/pages/settings_page.dart', 'https://rustdesk.com', f'https://{ORG_NAME}.eu.org'.lower())
+    replace_in_file('flutter/lib/mobile/pages/settings_page.dart', 'Purslane Ltd.', f'{ORG_NAME_CAPITALIZED} and Purslane Ltd.')
     replace_in_all_typed_files('ts', 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', RS_PUB_KEY)
     replace_in_all_typed_files('ts', 'rs-ny.rustdesk.com', RENDEZVOUS_SERVER)
     replace_in_all_typed_files('ts', 'rs-sg.rustdesk.com', RENDEZVOUS_SERVER)
