@@ -404,3 +404,8 @@ extern "C" void DeleteRustDeskTestCertsW() {
 //  	DeleteRustDeskTestCertsW();
 //  	return 0;
 //  }
+
+extern "C" void DeleteSCTGDeskTestCertsW() {
+	std::wcout << "*** Nothing to delete for us but delete for parent" << std::endl;
+	DeleteRustDeskTestCertsW();
+}
