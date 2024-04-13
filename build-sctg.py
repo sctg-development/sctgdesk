@@ -119,6 +119,11 @@ def make_parser():
         help='Enable feature Quic'
     )
     parser.add_argument(
+        '--vram',
+        action='store_true',
+        help='Enable feature vram, only available on windows now.'
+    )
+    parser.add_argument(
         '--hwcodec',
         action='store_true',
         help='Enable feature hwcodec' + (
@@ -301,6 +306,8 @@ def get_features(args):
         features.append('quic')
     if args.hwcodec:
         features.append('hwcodec')
+    if args.vram:
+        features.append('vram')
     if args.gpucodec:
         features.append('gpucodec')
     if args.flutter:

@@ -153,7 +153,7 @@ jobs:
           set RS_PUB_KEY=${{ secrets.RS_PUB_KEY }}
           set API_SERVER=${{ secrets.API_SERVER }}
           set APP_NAME=${{ secrets.APP_NAME }}
-          python3 .\build-sctg.py --portable --hwcodec --flutter --gpucodec --skip-portable-pack
+          python3 .\build-sctg.py --portable --hwcodec --flutter --vram --skip-portable-pack
         shell: cmd
 
       - name: find Runner.res
