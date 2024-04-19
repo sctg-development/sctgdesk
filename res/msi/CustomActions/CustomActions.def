@@ -10,3 +10,5 @@ EXPORTS
     CreateStartService
     TryDeleteStartupShortcut
     SetPropertyFromConfig
+    AddRegSoftwareSASGeneration
+    RemoveAmyuniIdd
