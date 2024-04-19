@@ -573,7 +573,7 @@ def build_web_app():
     system2('npx vite build')
     os.chdir('../..')
     system2('flutter pub upgrade')
-    system2('flutter build web --release')
+    system2('flutter build web --release --source-maps')
     os.chdir("..")
 
 def build_flutter_arch_manjaro(version, features):
