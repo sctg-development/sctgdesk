@@ -113,6 +113,8 @@ def make_parser():
              'Available: PrivacyMode. Special value is "ALL" and empty "". Default is empty.')
     parser.add_argument('--flutter', action='store_true',
                         help='Build flutter package', default=False)
+    parser.add_argument('--debug', action='store_true',
+                        help='Build flutter package with debug flag', default=False)
     parser.add_argument(
         '--quic',
         action='store_true',
@@ -546,17 +548,25 @@ def build_ios_ipa(version, features):
     system2('flutter build ipa --release --no-codesign')
     os.chdir('..')
 
-def build_flutter_dmg(version, features):
+def build_flutter_dmg(version, features, args):
     if not skip_cargo:
         # set minimum osx build target, now is 10.14, which is the same as the flutter xcode project
-        system2(
-            f'MACOSX_DEPLOYMENT_TARGET=10.14 cargo build --features {features} --lib --release')
+        if not args.debug:
+            system2(
+                f'MACOSX_DEPLOYMENT_TARGET=10.14 cargo build --features {features} --lib --release')
+            system2(
+                "cp target/release/liblibrustdesk.dylib target/release/librustdesk.dylib")
+        else:
+            system2(
+                f'MACOSX_DEPLOYMENT_TARGET=10.14 cargo build --features {features} --lib')
+            system2(
+                "cp target/debug/liblibrustdesk.dylib target/debug/librustdesk.dylib")
 
-    # copy dylib
-    system2(
-        "cp target/release/liblibrustdesk.dylib target/release/librustdesk.dylib")
     os.chdir('flutter')
-    system2('flutter build macos --release')
+    if not args.debug:
+        system2('flutter build macos --release')
+    else:
+        system2('flutter build macos -v --debug')
     APP_NAME = os.environ['APP_NAME']
     app_name = APP_NAME.lower()
     MACOS_CODESIGN_IDENTITY = os.environ.get('MACOS_CODESIGN_IDENTITY')
@@ -587,17 +597,24 @@ def build_flutter_arch_manjaro(version, features):
     system2('HBB=`pwd`/.. FLUTTER=1 makepkg -f')
 
 
-def build_flutter_windows(version, features, skip_portable_pack):
+def build_flutter_windows(version, features, skip_portable_pack, args):
+    build_mode = 'debug' if args.debug else 'release'
     if not skip_cargo:
-        system2(f'cargo build --features {features} --lib --release')
-        if not os.path.exists("target/release/librustdesk.dll"):
+        if not args.debug:
+            system2(f'cargo build --features {features} --lib --release')
+        else:
+            system2(f'cargo build --features {features} --lib')
+        if not os.path.exists(f"target/{build_mode}/librustdesk.dll"):
             print("cargo build failed, please check rust source code.")
             exit(-1)
     os.chdir('flutter')
     system2('flutter pub upgrade')
-    system2('flutter build windows --release')
+    if args.debug:
+        system2('flutter build windows --debug')
+    else:
+        system2('flutter build windows --release')
     os.chdir('..')
-    shutil.copy2('target/release/deps/dylib_virtual_display.dll',
+    shutil.copy2(f'target/{build_mode}/deps/dylib_virtual_display.dll',
                  flutter_build_dir_2)
     if skip_portable_pack:
         return
@@ -607,10 +624,10 @@ def build_flutter_windows(version, features, skip_portable_pack):
         f'python3 ./generate.py -f ../../{flutter_build_dir_2} -o . -e ../../{flutter_build_dir_2}/rustdesk.exe')
     os.chdir('../..')
     if os.path.exists('./rustdesk_portable.exe'):
-        os.replace('./target/release/rustdesk-portable-packer.exe',
+        os.replace(f'./target/{build_mode}/rustdesk-portable-packer.exe',
                    './rustdesk_portable.exe')
     else:
-        os.rename('./target/release/rustdesk-portable-packer.exe',
+        os.rename(f'./target/{build_mode}/rustdesk-portable-packer.exe',
                   './rustdesk_portable.exe')
     print(
         f'output location: {os.path.abspath(os.curdir)}/rustdesk_portable.exe')
@@ -656,7 +673,7 @@ def main():
         os.chdir('../../..')
 
         if flutter:
-            build_flutter_windows(version, features, args.skip_portable_pack)
+            build_flutter_windows(version, features, args.skip_portable_pack, args)
             return
         system2('cargo build --release --features ' + features)
         # system2('upx.exe target/release/rustdesk.exe')
@@ -715,7 +732,7 @@ def main():
             if ios:
                 build_ios_ipa(version, features)
             elif osx:
-                build_flutter_dmg(version, features)
+                build_flutter_dmg(version, features, args)
                 pass
             else:
                 # system2(
