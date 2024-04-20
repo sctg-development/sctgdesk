@@ -387,8 +387,8 @@ impl RendezvousMediator {
     }
 
     pub fn is_udp_disabled() -> bool {
-        let option_tcp = Config::get_option("disable-udp-mode");
-        log::debug!("disable-udp-mode: {}", option_tcp);
+        let option_tcp = Config::get_option("enable-tcp-mode");
+        log::debug!("enable-tcp-mode: {}", option_tcp);
         if option_tcp == "N"{
             return true;
         }else{

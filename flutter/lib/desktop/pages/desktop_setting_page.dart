@@ -1186,7 +1186,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
                     apiController, apiErrMsg.value, enabled, secure)),
                 _LabeledTextField(
                     context, 'Key', keyController, '', enabled, secure),
-                _OptionCheckBox(context, 'UDP mode', 'disable-udp-mode',
+                _OptionCheckBox(context, 'UDP mode', 'enable-tcp-mode',
                     enabled: enabled),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -1609,7 +1609,7 @@ class _AboutState extends State<_About> {
           child: SingleChildScrollView(
             controller: scrollController,
             physics: DraggableNeverScrollableScrollPhysics(),
-            child: _Card(title: '${translate('About')} RustDesk', children: [
+            child: _Card(title: '${translate('About')} SCTGDesk', children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1627,7 +1627,7 @@ class _AboutState extends State<_About> {
                           .marginSymmetric(vertical: 4.0)),
                   InkWell(
                       onTap: () {
-                        launchUrlString('https://rustdesk.com/privacy.html');
+                        launchUrlString('https://sctg.eu.org/privacy.html');
                       },
                       child: Text(
                         translate('Privacy Statement'),
@@ -1635,7 +1635,7 @@ class _AboutState extends State<_About> {
                       ).marginSymmetric(vertical: 4.0)),
                   InkWell(
                       onTap: () {
-                        launchUrlString('https://rustdesk.com');
+                        launchUrlString('https://sctg.eu.org');
                       },
                       child: Text(
                         translate('Website'),
@@ -1653,7 +1653,7 @@ class _AboutState extends State<_About> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Copyright © ${DateTime.now().toString().substring(0, 4)} Purslane Ltd.\n$license',
+                                'Copyright © ${DateTime.now().toString().substring(0, 4)} Sctg and Purslane Ltd.\n$license',
                                 style: const TextStyle(color: Colors.white),
                               ),
                               Text(

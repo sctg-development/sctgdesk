@@ -115,10 +115,18 @@ def make_parser():
                         help='Build flutter package', default=False)
     parser.add_argument('--debug', action='store_true',
                         help='Build flutter package with debug flag', default=False)
+    parser.add_argument('--no_customization', action='store_true',
+                        help='Disable application customization', default=False)
     parser.add_argument(
         '--quic',
         action='store_true',
         help='Enable feature Quic'
+    )
+    API_SERVER = os.environ['API_SERVER']
+    parser.add_argument(
+        '--disable_api_server_forced',
+        action='store_true',
+        help=f'Disable API server forced to https://{API_SERVER}/'
     )
     parser.add_argument(
         '--vram',
@@ -481,9 +489,10 @@ def insert_line_after(file_path, search_string, new_line):
     with open(file_path, 'w') as file:
         file.writelines(lines)
 
-def sctgdesk_customization():
+def sctgdesk_customization(args):
     MACOS_CODESIGN_IDENTITY = os.environ.get('MACOS_CODESIGN_IDENTITY')
     APP_NAME = os.environ['APP_NAME']
+    APP_NAME_CAPITALIZED = APP_NAME.lower().capitalize()
     RENDEZVOUS_SERVER = os.environ['RENDEZVOUS_SERVER']
     RS_PUB_KEY = os.environ['RS_PUB_KEY']
     API_SERVER = os.environ['API_SERVER']
@@ -494,7 +503,6 @@ def sctgdesk_customization():
     if match:
         TEAM_ID = match.group(1)
     replace_in_file('flutter/ios/Runner.xcodeproj/project.pbxproj',"HZF9JMC8YN",TEAM_ID)
-    replace_in_file('flutter/web/client.html', '__API_SERVER__', f'https://{API_SERVER}')
     replace_in_file('libs/hbb_common/src/config.rs', 'rs-ny.rustdesk.com', RENDEZVOUS_SERVER)
     replace_in_file('libs/hbb_common/src/config.rs', 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', RS_PUB_KEY)
     replace_in_file('flutter/web/js/src/connection.ts', 'const PORT = 21116', 'const PORT = 21118')
@@ -535,8 +543,12 @@ def sctgdesk_customization():
     replace_in_all_typed_files('xcconfig', 'com.carriez', f'com.{ORG_NAME}'.lower())
     replace_in_all_typed_files('desktop', 'RustDesk', f'{APP_NAME}')
     replace_in_all_typed_files('service', 'RustDesk', f'{APP_NAME}')
-    insert_line_after('src/common.rs','pub fn get_api_server',f'    return format!("https://{API_SERVER}");')
-    insert_line_after('flutter/web/js/src/globals.js','function getApiServer()',f'  return "https://{API_SERVER}";')
+    replace_in_file('flutter/lib/models/platform_model.dart', 'RustdeskImpl', f'{APP_NAME_CAPITALIZED}Impl')
+    replace_in_file('flutter/lib/models/native_model.dart', 'RustdeskImpl', f'{APP_NAME_CAPITALIZED}Impl')
+    if not args.disable_api_server_forced:
+        replace_in_file('flutter/web/client.html', '__API_SERVER__', f'https://{API_SERVER}')
+        insert_line_after('src/common.rs','pub fn get_api_server',f'    return format!("https://{API_SERVER}");')
+        insert_line_after('flutter/web/js/src/globals.js','function getApiServer()',f'  return "https://{API_SERVER}";')
 
 def build_ios_ipa(version, features):
     MACOS_CODESIGN_IDENTITY = os.environ.get('MACOS_CODESIGN_IDENTITY')
@@ -652,7 +664,8 @@ def main():
     web = args.web
     if not flutter:
         system2('python3 res/inline-sciter.py')
-    sctgdesk_customization()
+    if not args.no_customization:
+        sctgdesk_customization(args)
     print(args.skip_cargo)
     if args.skip_cargo:
         skip_cargo = True
