@@ -496,59 +496,61 @@ def sctgdesk_customization(args):
     RENDEZVOUS_SERVER = os.environ['RENDEZVOUS_SERVER']
     RS_PUB_KEY = os.environ['RS_PUB_KEY']
     API_SERVER = os.environ['API_SERVER']
+    API_SERVER_PROTOCOL = API_SERVER_PROTOCOL = os.environ.get('API_SERVER_PROTOCOL', "https")
     ORG_NAME = os.environ['ORG_NAME']
     ORG_NAME_CAPITALIZED = ORG_NAME.capitalize()
     TEAM_ID="HZF9JMC8YN"
     match = re.search(r'\(([A-Z0-9]+)\)$', MACOS_CODESIGN_IDENTITY)
     if match:
         TEAM_ID = match.group(1)
-    replace_in_file('flutter/ios/Runner.xcodeproj/project.pbxproj',"HZF9JMC8YN",TEAM_ID)
-    replace_in_file('libs/hbb_common/src/config.rs', 'rs-ny.rustdesk.com', RENDEZVOUS_SERVER)
-    replace_in_file('libs/hbb_common/src/config.rs', 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', RS_PUB_KEY)
-    replace_in_file('flutter/web/js/src/connection.ts', 'const PORT = 21116', 'const PORT = 21118')
-    replace_in_file('flutter/web/js/src/connection.ts', 'uri = tmp[0] + ":" + (port + (isRelay ? roffset || 3 : 2));','uri = tmp[0] + ":" + (PORT + (isRelay ? 3 : 2));')
-    replace_in_file('flutter/web/js/src/connection.ts', 'ws://', 'wss://')
-    replace_in_file('libs/portable/generate.py', 'rustdesk.exe', f'.{APP_NAME}.exe'.lower())
-    replace_in_file('flatpak/rustdesk.json', 'rustdesk-', f'{APP_NAME}-'.lower())
-    replace_in_file('flutter/lib/desktop/pages/desktop_setting_page.dart', 'https://rustdesk.com', f'https://{ORG_NAME}.eu.org'.lower())
-    replace_in_file('flutter/lib/desktop/pages/desktop_setting_page.dart', 'Purslane Ltd.', f'{ORG_NAME_CAPITALIZED} and Purslane Ltd.')
-    replace_in_file('flutter/lib/mobile/pages/settings_page.dart', 'https://rustdesk.com', f'https://{ORG_NAME}.eu.org'.lower())
-    replace_in_file('flutter/lib/mobile/pages/settings_page.dart', 'Purslane Ltd.', f'{ORG_NAME_CAPITALIZED} and Purslane Ltd.')
-    replace_in_all_typed_files('ts', 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', RS_PUB_KEY)
-    replace_in_all_typed_files('ts', 'rs-ny.rustdesk.com', RENDEZVOUS_SERVER)
-    replace_in_all_typed_files('ts', 'rs-sg.rustdesk.com', RENDEZVOUS_SERVER)
-    replace_in_all_typed_files('ts', 'rs-cn.rustdesk.com', RENDEZVOUS_SERVER)
-    replace_in_all_typed_files('ts', 'rs-us.rustdesk.com', RENDEZVOUS_SERVER)
-    replace_in_all_typed_files('js', 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', RS_PUB_KEY)
-    replace_in_all_typed_files('js', 'rs-ny.rustdesk.com', RENDEZVOUS_SERVER)
-    replace_in_all_typed_files('js', 'rs-sg.rustdesk.com', RENDEZVOUS_SERVER)
-    replace_in_all_typed_files('js', 'rs-cn.rustdesk.com', RENDEZVOUS_SERVER)
-    replace_in_all_typed_files('js', 'rs-us.rustdesk.com', RENDEZVOUS_SERVER)
-    replace_in_all_typed_files('rc', 'RustDesk', f'{APP_NAME}')
-    replace_in_all_typed_files('rc', 'rustdesk', f'{APP_NAME}'.lower())
-    replace_in_file('src/common.rs', 'https://admin.rustdesk.com', f'https://{API_SERVER}')
-    replace_in_all_dart_files('RustDesk', f'{APP_NAME}')
-    replace_in_all_rust_files('RustDesk', f'{APP_NAME}')
-    replace_in_all_toml_files('RustDesk', f'{APP_NAME}')
-    replace_in_all_toml_files('"rustdesk"', f'"{APP_NAME}"'.lower())
-    replace_in_all_toml_files('"rustdesk.exe"', f'"{APP_NAME}"'.lower())
-    replace_in_all_typed_files('rc','"rustdesk.exe"', f'"{APP_NAME}"'.lower())
-    replace_in_all_typed_files('plist', 'RustDesk', f'{APP_NAME}')
-    replace_in_all_typed_files('plist', 'com.carriez.rustdesk', f'com.{ORG_NAME}.{APP_NAME}'.lower())
-    replace_in_all_typed_files('plist', 'com.carriez.flutterHbb', f'com.{ORG_NAME}.{APP_NAME}-ios'.lower())
-    replace_in_all_typed_files('pbxproj', 'com.carriez.flutterHbb', f'com.{ORG_NAME}.{APP_NAME}-ios'.lower())
-    replace_in_all_typed_files('html', 'rustdesk', f'{APP_NAME}'.lower())
-    replace_in_all_typed_files('xcscheme', 'RustDesk', f'{APP_NAME}')
-    replace_in_all_typed_files('xcconfig', 'RustDesk', f'{APP_NAME}')
-    replace_in_all_typed_files('xcconfig', 'com.carriez', f'com.{ORG_NAME}'.lower())
-    replace_in_all_typed_files('desktop', 'RustDesk', f'{APP_NAME}')
-    replace_in_all_typed_files('service', 'RustDesk', f'{APP_NAME}')
+    if not args.no_customization:
+        replace_in_file('flutter/ios/Runner.xcodeproj/project.pbxproj',"HZF9JMC8YN",TEAM_ID)
+        replace_in_file('libs/hbb_common/src/config.rs', 'rs-ny.rustdesk.com', RENDEZVOUS_SERVER)
+        replace_in_file('libs/hbb_common/src/config.rs', 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', RS_PUB_KEY)
+        replace_in_file('flutter/web/js/src/connection.ts', 'const PORT = 21116', 'const PORT = 21118')
+        replace_in_file('flutter/web/js/src/connection.ts', 'uri = tmp[0] + ":" + (port + (isRelay ? roffset || 3 : 2));','uri = tmp[0] + ":" + (PORT + (isRelay ? 3 : 2));')
+        replace_in_file('flutter/web/js/src/connection.ts', 'ws://', 'wss://')
+        replace_in_file('libs/portable/generate.py', 'rustdesk.exe', f'.{APP_NAME}.exe'.lower())
+        replace_in_file('flatpak/rustdesk.json', 'rustdesk-', f'{APP_NAME}-'.lower())
+        replace_in_file('flutter/lib/desktop/pages/desktop_setting_page.dart', 'https://rustdesk.com', f'https://{ORG_NAME}.eu.org'.lower())
+        replace_in_file('flutter/lib/desktop/pages/desktop_setting_page.dart', 'Purslane Ltd.', f'{ORG_NAME_CAPITALIZED} and Purslane Ltd.')
+        replace_in_file('flutter/lib/mobile/pages/settings_page.dart', 'https://rustdesk.com', f'https://{ORG_NAME}.eu.org'.lower())
+        replace_in_file('flutter/lib/mobile/pages/settings_page.dart', 'Purslane Ltd.', f'{ORG_NAME_CAPITALIZED} and Purslane Ltd.')
+        replace_in_all_typed_files('ts', 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', RS_PUB_KEY)
+        replace_in_all_typed_files('ts', 'rs-ny.rustdesk.com', RENDEZVOUS_SERVER)
+        replace_in_all_typed_files('ts', 'rs-sg.rustdesk.com', RENDEZVOUS_SERVER)
+        replace_in_all_typed_files('ts', 'rs-cn.rustdesk.com', RENDEZVOUS_SERVER)
+        replace_in_all_typed_files('ts', 'rs-us.rustdesk.com', RENDEZVOUS_SERVER)
+        replace_in_all_typed_files('js', 'OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=', RS_PUB_KEY)
+        replace_in_all_typed_files('js', 'rs-ny.rustdesk.com', RENDEZVOUS_SERVER)
+        replace_in_all_typed_files('js', 'rs-sg.rustdesk.com', RENDEZVOUS_SERVER)
+        replace_in_all_typed_files('js', 'rs-cn.rustdesk.com', RENDEZVOUS_SERVER)
+        replace_in_all_typed_files('js', 'rs-us.rustdesk.com', RENDEZVOUS_SERVER)
+        replace_in_all_typed_files('rc', 'RustDesk', f'{APP_NAME}')
+        replace_in_all_typed_files('rc', 'rustdesk', f'{APP_NAME}'.lower())
+        replace_in_file('src/common.rs', 'https://admin.rustdesk.com', f'https://{API_SERVER}')
+        replace_in_all_dart_files('RustDesk', f'{APP_NAME}')
+        replace_in_all_rust_files('RustDesk', f'{APP_NAME}')
+        replace_in_all_toml_files('RustDesk', f'{APP_NAME}')
+        replace_in_all_toml_files('"rustdesk"', f'"{APP_NAME}"'.lower())
+        replace_in_all_toml_files('"rustdesk.exe"', f'"{APP_NAME}"'.lower())
+        replace_in_all_typed_files('rc','"rustdesk.exe"', f'"{APP_NAME}"'.lower())
+        replace_in_all_typed_files('plist', 'RustDesk', f'{APP_NAME}')
+        replace_in_all_typed_files('plist', 'com.carriez.rustdesk', f'com.{ORG_NAME}.{APP_NAME}'.lower())
+        replace_in_all_typed_files('plist', 'com.carriez.flutterHbb', f'com.{ORG_NAME}.{APP_NAME}-ios'.lower())
+        replace_in_all_typed_files('pbxproj', 'com.carriez.flutterHbb', f'com.{ORG_NAME}.{APP_NAME}-ios'.lower())
+        replace_in_all_typed_files('html', 'rustdesk', f'{APP_NAME}'.lower())
+        replace_in_all_typed_files('xcscheme', 'RustDesk', f'{APP_NAME}')
+        replace_in_all_typed_files('xcconfig', 'RustDesk', f'{APP_NAME}')
+        replace_in_all_typed_files('xcconfig', 'com.carriez', f'com.{ORG_NAME}'.lower())
+        replace_in_all_typed_files('desktop', 'RustDesk', f'{APP_NAME}')
+        replace_in_all_typed_files('service', 'RustDesk', f'{APP_NAME}')
+        if not args.disable_api_server_forced:
+            replace_in_file('flutter/web/client.html', '__API_SERVER__', f'{API_SERVER_PROTOCOL}://{API_SERVER}')
+            insert_line_after('src/common.rs','pub fn get_api_server',f'    return format!("{API_SERVER_PROTOCOL}://{API_SERVER}");')
+            insert_line_after('flutter/web/js/src/globals.js','function getApiServer()',f'  return "{API_SERVER_PROTOCOL}://{API_SERVER}";')
     replace_in_file('flutter/lib/models/platform_model.dart', 'RustdeskImpl', f'{APP_NAME_CAPITALIZED}Impl')
     replace_in_file('flutter/lib/models/native_model.dart', 'RustdeskImpl', f'{APP_NAME_CAPITALIZED}Impl')
-    if not args.disable_api_server_forced:
-        replace_in_file('flutter/web/client.html', '__API_SERVER__', f'https://{API_SERVER}')
-        insert_line_after('src/common.rs','pub fn get_api_server',f'    return format!("https://{API_SERVER}");')
-        insert_line_after('flutter/web/js/src/globals.js','function getApiServer()',f'  return "https://{API_SERVER}";')
 
 def build_ios_ipa(version, features):
     MACOS_CODESIGN_IDENTITY = os.environ.get('MACOS_CODESIGN_IDENTITY')
@@ -563,6 +565,7 @@ def build_ios_ipa(version, features):
 def build_flutter_dmg(version, features, args):
     if not skip_cargo:
         # set minimum osx build target, now is 10.14, which is the same as the flutter xcode project
+        print(f"Cargo building with {features} features")
         if not args.debug:
             system2(
                 f'MACOSX_DEPLOYMENT_TARGET=10.14 cargo build --features {features} --lib --release')
@@ -571,6 +574,10 @@ def build_flutter_dmg(version, features, args):
         else:
             system2(
                 f'MACOSX_DEPLOYMENT_TARGET=10.14 cargo build --features {features} --lib')
+            system2(
+                "mkdir -p target/release")
+            system2(
+                "cp target/debug/liblibrustdesk.dylib target/release/librustdesk.dylib")
             system2(
                 "cp target/debug/liblibrustdesk.dylib target/debug/librustdesk.dylib")
 
@@ -664,8 +671,7 @@ def main():
     web = args.web
     if not flutter:
         system2('python3 res/inline-sciter.py')
-    if not args.no_customization:
-        sctgdesk_customization(args)
+    sctgdesk_customization(args)
     print(args.skip_cargo)
     if args.skip_cargo:
         skip_cargo = True
