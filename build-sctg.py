@@ -122,6 +122,12 @@ def make_parser():
         action='store_true',
         help='Enable feature Quic'
     )
+    parser.add_argument(
+        '--local_build',
+        action='store_true',
+        help='Only for local build',
+        default=False
+    )
     API_SERVER = os.environ['API_SERVER']
     parser.add_argument(
         '--disable_api_server_forced',
@@ -549,8 +555,9 @@ def sctgdesk_customization(args):
             replace_in_file('flutter/web/client.html', '__API_SERVER__', f'{API_SERVER_PROTOCOL}://{API_SERVER}')
             insert_line_after('src/common.rs','pub fn get_api_server',f'    return format!("{API_SERVER_PROTOCOL}://{API_SERVER}");')
             insert_line_after('flutter/web/js/src/globals.js','function getApiServer()',f'  return "{API_SERVER_PROTOCOL}://{API_SERVER}";')
-    replace_in_file('flutter/lib/models/platform_model.dart', 'RustdeskImpl', f'{APP_NAME_CAPITALIZED}Impl')
-    replace_in_file('flutter/lib/models/native_model.dart', 'RustdeskImpl', f'{APP_NAME_CAPITALIZED}Impl')
+    if args.local_build:
+        replace_in_file('flutter/lib/models/platform_model.dart', 'RustdeskImpl', f'{APP_NAME_CAPITALIZED}Impl')
+        replace_in_file('flutter/lib/models/native_model.dart', 'RustdeskImpl', f'{APP_NAME_CAPITALIZED}Impl')
 
 def build_ios_ipa(version, features):
     MACOS_CODESIGN_IDENTITY = os.environ.get('MACOS_CODESIGN_IDENTITY')
