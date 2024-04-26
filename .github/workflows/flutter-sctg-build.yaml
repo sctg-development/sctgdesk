@@ -468,7 +468,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install nasm
+          brew install nasm llvm nasm cmake gcc wget ninja pkg-config
       - name: Checkout source code
         uses: actions/checkout@v4
 
