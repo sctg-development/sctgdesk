@@ -455,6 +455,12 @@ jobs:
               os: macos-latest,
               extra-build-features: "",
             }
+          - {
+              target: x86_64-apple-darwin,
+              os: macos-latest,
+              extra-build-args: "",
+              arch: x86_64
+            }
     steps:
       - name: Check if BUILD_IOS is true
         run: if [[ "${{ env.BUILD_IOS }}" != "true" ]]; then exit 1; fi
