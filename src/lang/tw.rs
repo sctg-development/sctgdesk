@@ -239,6 +239,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Empty", "空空如也"),
         ("Invalid folder name", "資料夾名稱無效"),
         ("Socks5 Proxy", "Socks5 代理伺服器"),
+        ("Socks5/Http(s) Proxy", "Socks5/Http(s) 代理伺服器"),
         ("Discovered", "已探索"),
         ("install_daemon_tip", "若要在開機時啟動，您需要安裝系統服務。"),
         ("Remote ID", "遠端 ID"),
@@ -602,5 +603,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("ab_web_console_tip", "打開 Web 控制台以進行更多操作"),
         ("allow-only-conn-window-open-tip", "只在 RustDesk 視窗開啟時允許連接"),
         ("no_need_privacy_mode_no_physical_displays_tip", ""),
+        ("Follow remote cursor", ""),
+        ("Follow remote window focus", ""),
     ].iter().cloned().collect();
 }

@@ -239,6 +239,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Empty", "فارغ"),
         ("Invalid folder name", "اسم المجلد غير صحيح"),
         ("Socks5 Proxy", "وكيل Socks5"),
+        ("Socks5/Http(s) Proxy", "وكيل Socks5/Http(s)"),
         ("Discovered", "المكتشفة"),
         ("install_daemon_tip", "للبدء مع بدء تشغيل النظام. تحتاج الى تثبيت خدمة النظام."),
         ("Remote ID", "المعرف البعيد"),
@@ -602,5 +603,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("ab_web_console_tip", ""),
         ("allow-only-conn-window-open-tip", ""),
         ("no_need_privacy_mode_no_physical_displays_tip", ""),
+        ("Follow remote cursor", ""),
+        ("Follow remote window focus", ""),
     ].iter().cloned().collect();
 }

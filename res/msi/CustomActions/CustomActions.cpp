@@ -70,7 +70,7 @@ UINT __stdcall RemoveInstallFolder(
     }
 
 LExit:
-    ReleaseStr(installFolder);
+    ReleaseStr(pwzData);
 
     er = SUCCEEDED(hr) ? ERROR_SUCCESS : ERROR_INSTALL_FAILURE;
     return WcaFinalize(er);
@@ -608,10 +608,21 @@ UINT __stdcall RemoveAmyuniIdd(
     HINSTANCE hi = 0;
 
     SYSTEM_INFO si;
-    LPCWSTR exe = NULL;
+    LPCWSTR exe = L"deviceinstaller64.exe";
+    WCHAR exePath[1024] = L"";
+
+    BOOL rebootRequired = FALSE;
 
     hr = WcaInitialize(hInstall, "RemoveAmyuniIdd");
     ExitOnFailure(hr, "Failed to initialize");
+
+    UninstallDriver(L"usbmmidd", rebootRequired);
+
+    // Only for x86 app on x64
+    GetNativeSystemInfo(&si);
+    if (si.wProcessorArchitecture != PROCESSOR_ARCHITECTURE_AMD64) {
+        goto LExit;
+    }
 
     hr = WcaGetProperty(L"CustomActionData", &pwzData);
     ExitOnFailure(hr, "failed to get CustomActionData");
@@ -624,18 +635,17 @@ UINT __stdcall RemoveAmyuniIdd(
     ExitOnFailure(hr, "Failed to compose a resource identifier string");
     fileAttributes = GetFileAttributesW(workDir);
     if (fileAttributes == INVALID_FILE_ATTRIBUTES) {
-        WcaLog(LOGMSG_STANDARD, "Amyuni idd dir \"%ls\" is out found, %d", workDir, fileAttributes);
+        WcaLog(LOGMSG_STANDARD, "Amyuni idd dir \"%ls\" is not found, %d", workDir, fileAttributes);
         goto LExit;
     }
 
-    GetNativeSystemInfo(&si);
-    if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) {
-        exe = L"deviceinstaller64.exe";
-    } else {
-        // No need to check if is other architecture.
-        // Because the driver is only for x86 and x64. It will not work at on other architectures.
-        exe = L"deviceinstaller.exe";
+    hr = StringCchPrintfW(exePath, 1024, L"%ls\\%ls", workDir, exe);
+    ExitOnFailure(hr, "Failed to compose a resource identifier string");
+    fileAttributes = GetFileAttributesW(exePath);
+    if (fileAttributes == INVALID_FILE_ATTRIBUTES) {
+        goto LExit;
     }
+
     WcaLog(LOGMSG_STANDARD, "Remove amyuni idd %ls in %ls", exe, workDir);
     hi = ShellExecuteW(NULL, L"open", exe, L"remove usbmmidd", workDir, SW_HIDE);
     // https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shellexecutew
@@ -647,7 +657,9 @@ UINT __stdcall RemoveAmyuniIdd(
     }
 
 LExit:
-    ReleaseStr(installFolder);
+    if (pwzData) {
+        ReleaseStr(pwzData);
+    }
 
     er = SUCCEEDED(hr) ? ERROR_SUCCESS : ERROR_INSTALL_FAILURE;
     return WcaFinalize(er);

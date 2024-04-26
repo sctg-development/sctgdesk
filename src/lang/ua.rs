@@ -239,6 +239,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Empty", "Пусто"),
         ("Invalid folder name", "Неприпустима назва теки"),
         ("Socks5 Proxy", "Проксі-сервер Socks5"),
+        ("Socks5/Http(s) Proxy", "Проксі-сервер Socks5/Http(s)"),
         ("Discovered", "Знайдено"),
         ("install_daemon_tip", "Для запуску під час завантаження, вам необхідно встановити системну службу"),
         ("Remote ID", "Віддалений ідентифікатор"),
@@ -602,5 +603,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("ab_web_console_tip", "Детальніше про веб-консоль"),
         ("allow-only-conn-window-open-tip", ""),
         ("no_need_privacy_mode_no_physical_displays_tip", ""),
+        ("Follow remote cursor", ""),
+        ("Follow remote window focus", ""),
     ].iter().cloned().collect();
 }

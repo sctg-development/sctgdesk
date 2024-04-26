@@ -239,6 +239,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Empty", "Keine Einträge"),
         ("Invalid folder name", "Ungültiger Ordnername"),
         ("Socks5 Proxy", "SOCKS5-Proxy"),
+        ("Socks5/Http(s) Proxy", "SOCKS5/HTTP(S)-Proxy"),
         ("Discovered", "Im LAN erkannt"),
         ("install_daemon_tip", "Um mit System zu starten, muss der Systemdienst installiert sein."),
         ("Remote ID", "Entfernte ID"),
@@ -602,5 +603,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("ab_web_console_tip", "Mehr über Webkonsole"),
         ("allow-only-conn-window-open-tip", "Verbindung nur zulassen, wenn das RustDesk-Fenster geöffnet ist"),
         ("no_need_privacy_mode_no_physical_displays_tip", "Keine physischen Bildschirme; keine Notwendigkeit, den Datenschutzmodus zu verwenden."),
+        ("Follow remote cursor", "Dem entfernten Cursor folgen"),
+        ("Follow remote window focus", "Dem Fokus des entfernten Fensters folgen"),
     ].iter().cloned().collect();
 }

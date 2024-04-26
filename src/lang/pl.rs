@@ -239,6 +239,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Empty", "Pusto"),
         ("Invalid folder name", "Nieprawidłowa nazwa folderu"),
         ("Socks5 Proxy", "Proxy Socks5"),
+        ("Socks5/Http(s) Proxy", "Proxy Socks5/Http(s)"),
         ("Discovered", "Wykryte"),
         ("install_daemon_tip", "By uruchomić RustDesk przy starcie systemu, musisz zainstalować usługę systemową."),
         ("Remote ID", "Zdalne ID"),
@@ -602,5 +603,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("ab_web_console_tip", "Więcej w konsoli web"),
         ("allow-only-conn-window-open-tip", "Zezwalaj na połączenie tylko wtedy, gdy okno RustDesk jest otwarte"),
         ("no_need_privacy_mode_no_physical_displays_tip", ""),
+        ("Follow remote cursor", ""),
+        ("Follow remote window focus", ""),
     ].iter().cloned().collect();
 }
