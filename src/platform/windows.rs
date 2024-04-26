@@ -12,7 +12,7 @@ use hbb_common::{
     bail,
     config::{self, Config},
     log,
-    message_proto::{Resolution, WindowsSession},
+    message_proto::{DisplayInfo, Resolution, WindowsSession},
     sleep, timeout, tokio,
 };
 use std::process::{Command, Stdio};
@@ -29,6 +29,7 @@ use std::{
     time::{Duration, Instant},
 };
 use wallpaper;
+use winapi::um::sysinfoapi::{GetNativeSystemInfo, SYSTEM_INFO};
 use winapi::{
     ctypes::c_void,
     shared::{minwindef::*, ntdef::NULL, windef::*, winerror::*},
@@ -42,7 +43,6 @@ use winapi::{
         },
         securitybaseapi::GetTokenInformation,
         shellapi::ShellExecuteW,
-        sysinfoapi::{GetNativeSystemInfo, SYSTEM_INFO},
         winbase::*,
         wingdi::*,
         winnt::{
@@ -64,6 +64,24 @@ use windows_service::{
 };
 use winreg::enums::*;
 use winreg::RegKey;
+
+pub fn get_focused_display(displays: Vec<DisplayInfo>) -> Option<usize> {
+    unsafe {
+        let hWnd = GetForegroundWindow();
+        let mut rect: RECT = mem::zeroed();
+        if GetWindowRect(hWnd, &mut rect as *mut RECT) == 0 {
+            return None;
+        }
+        displays.iter().position(|display| {
+            let center_x = rect.left + (rect.right - rect.left) / 2;
+            let center_y = rect.top + (rect.bottom - rect.top) / 2;
+            center_x >= display.x
+                && center_x <= display.x + display.width
+                && center_y >= display.y
+                && center_y <= display.y + display.height
+        })
+    }
+}
 
 pub fn get_cursor_pos() -> Option<(i32, i32)> {
     unsafe {
@@ -1303,7 +1321,7 @@ fn get_uninstall(kill_self: bool) -> String {
     if exist \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\{app_name} Tray.lnk\" del /f /q \"%PROGRAMDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\{app_name} Tray.lnk\"
     ",
         before_uninstall=get_before_uninstall(kill_self),
-        uninstall_amyuni_idd=get_uninstall_amyuni_idd(&path),
+        uninstall_amyuni_idd=get_uninstall_amyuni_idd(),
         app_name = crate::get_app_name(),
     )
 }
@@ -2370,37 +2388,13 @@ impl Drop for WallPaperRemover {
     }
 }
 
-pub fn get_amyuni_exe_name() -> Option<String> {
-    let mut sys_info = SYSTEM_INFO::default();
-    unsafe {
-        GetNativeSystemInfo(&mut sys_info as _);
-    }
-    const PROCESSOR_ARCHITECTURE_INTEL: u16 = 0;
-    const PROCESSOR_ARCHITECTURE_AMD64: u16 = 9;
-
-    let exe = match unsafe { sys_info.u.s().wProcessorArchitecture } {
-        PROCESSOR_ARCHITECTURE_INTEL => "deviceinstaller.exe",
-        PROCESSOR_ARCHITECTURE_AMD64 => "deviceinstaller64.exe",
-        _ => {
-            log::error!("Unsupported machine architecture");
-            return None;
+fn get_uninstall_amyuni_idd() -> String {
+    match std::env::current_exe() {
+        Ok(path) => format!("\"{}\" --uninstall-amyuni-idd", path.to_str().unwrap_or("")),
+        Err(e) => {
+            log::warn!("Failed to get current exe path, cannot get command of uninstalling idd, Zzerror: {:?}", e);
+            "".to_string()
         }
-    };
-    Some(exe.to_string())
-}
-
-fn get_uninstall_amyuni_idd(path: &str) -> String {
-    let Some(exe) = get_amyuni_exe_name() else {
-        return "".to_string();
-    };
-    let work_dir = PathBuf::from(path).join("usbmmidd_v2");
-    if work_dir.join(&exe).exists() {
-        format!(
-            "pushd {} && .\\{exe} remove usbmmidd && popd",
-            work_dir.to_string_lossy()
-        )
-    } else {
-        "".to_string()
     }
 }
 
@@ -2414,4 +2408,14 @@ pub fn is_service_running(service_name: &str) -> bool {
         let service_name = wide_string(service_name);
         is_service_running_w(service_name.as_ptr() as _)
     }
+}
+
+pub fn is_x64() -> bool {
+    const PROCESSOR_ARCHITECTURE_AMD64: u16 = 9;
+
+    let mut sys_info = SYSTEM_INFO::default();
+    unsafe {
+        GetNativeSystemInfo(&mut sys_info as _);
+    }
+    unsafe { sys_info.u.s().wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 }
 }

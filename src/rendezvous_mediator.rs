@@ -15,6 +15,7 @@ use hbb_common::{
     config::{self, Config, CONNECT_TIMEOUT, READ_TIMEOUT, REG_INTERVAL, RENDEZVOUS_PORT},
     futures::future::join_all,
     log,
+    proxy::Proxy,
     protobuf::Message as _,
     rendezvous_proto::*,
     sleep,
@@ -397,9 +398,15 @@ impl RendezvousMediator {
     }
 
     pub async fn start(server: ServerPtr, host: String) -> ResultType<()> {
+        //If the investment agent type is http or https, then tcp forwarding is enabled.
+        let is_http_proxy = if let Some(conf) = Config::get_socks() {
+            let proxy = Proxy::from_conf(&conf, None)?;
+            proxy.is_http_or_https()
+        } else {
+            false
+        };
         log::info!("start rendezvous mediator of {}", host);
-        if  Self::is_udp_disabled() {
-            log::info!("start rendezvous mediator in tcp mode");
+        if  Self::is_udp_disabled() || is_http_proxy {
             Self::start_tcp(server, host).await
         } else {
             Self::start_udp(server, host).await

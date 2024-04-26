@@ -239,6 +239,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Empty", "Prázdné"),
         ("Invalid folder name", "Neplatný název složky"),
         ("Socks5 Proxy", "Socks5 proxy"),
+        ("Socks5/Http(s) Proxy", "Socks5/Http(s) proxy"),
         ("Discovered", "Objeveno"),
         ("install_daemon_tip", "Pokud má být spouštěno při startu systému, je třeba nainstalovat systémovou službu."),
         ("Remote ID", "Vzdálené ID"),
@@ -602,5 +603,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("ab_web_console_tip", "Více na webové konzoli"),
         ("allow-only-conn-window-open-tip", "Povolit připojení pouze v případě, že je otevřené okno RustDesk"),
         ("no_need_privacy_mode_no_physical_displays_tip", "Žádné fyzické displeje, není třeba používat režim soukromí."),
+        ("Follow remote cursor", ""),
+        ("Follow remote window focus", ""),
     ].iter().cloned().collect();
 }

@@ -207,7 +207,6 @@ fn get_supported_impl(impl_key: &str) -> String {
     cur_impl
 }
 
-#[inline]
 pub async fn turn_on_privacy(impl_key: &str, conn_id: i32) -> Option<ResultType<bool>> {
     if is_async_privacy_mode() {
         turn_on_privacy_async(impl_key.to_string(), conn_id).await

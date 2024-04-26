@@ -239,6 +239,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Empty", "موردی وجود ندارد"),
         ("Invalid folder name", "نام پوشه نامعتبر است"),
         ("Socks5 Proxy", "Socks5 پروکسی"),
+        ("Socks5/Http(s) Proxy", "Socks5/Http(s) پروکسی"),
         ("Discovered", "پیدا شده"),
         ("install_daemon_tip", "برای شروع در هنگام راه اندازی، باید سرویس سیستم را نصب کنید"),
         ("Remote ID", "شناسه راه دور"),
@@ -602,5 +603,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("ab_web_console_tip", "اطلاعات بیشتر در کنسول وب"),
         ("allow-only-conn-window-open-tip", ""),
         ("no_need_privacy_mode_no_physical_displays_tip", ""),
+        ("Follow remote cursor", ""),
+        ("Follow remote window focus", ""),
     ].iter().cloned().collect();
 }
