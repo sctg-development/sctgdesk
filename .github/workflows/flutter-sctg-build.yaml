@@ -538,7 +538,11 @@ jobs:
 
       - name: Install vcpkg dependencies
         run: |
-          $VCPKG_ROOT/vcpkg install --triplet arm64-ios --x-install-root="$VCPKG_ROOT/installed"
+          cmake --version
+          cc --version
+          c++ --version
+          # $VCPKG_ROOT/vcpkg install --triplet arm64-ios --x-install-root="$VCPKG_ROOT/installed"
+          $VCPKG_ROOT/vcpkg install --host-triplet=x64-osx-dynamic --triplet=arm64-ios --x-install-root="$VCPKG_ROOT/installed"
         shell: bash
 
       - name: Install Rust toolchain
