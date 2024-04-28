@@ -153,7 +153,13 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                           size: 22,
                         ),
                       ),
-                      onTap: () => DesktopSettingPage.switch2page(0),
+                      onTap: () => {
+                        if (DesktopSettingPage.tabKeys.isNotEmpty)
+                          {
+                            DesktopSettingPage.switch2page(
+                                DesktopSettingPage.tabKeys[0])
+                          }
+                      },
                       onHover: (value) => _editHover.value = value,
                     ),
                   ),
@@ -347,7 +353,8 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                               ).marginOnly(right: 8, top: 4),
                             ),
                           ),
-                          onTap: () => DesktopSettingPage.switch2page(0),
+                          onTap: () => DesktopSettingPage.switch2page(
+                              SettingsTabKey.safety),
                           onHover: (value) => editHover.value = value,
                         ),
                     ],
@@ -774,6 +781,12 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         final screenRect = parseParamScreenRect(args);
         await rustDeskWinManager.openMonitorSession(
             windowId, peerId, display, displayCount, screenRect);
+      } else if (call.method == kWindowEventRemoteWindowCoords) {
+        final windowId = int.tryParse(call.arguments);
+        if (windowId != null) {
+          return jsonEncode(
+              await rustDeskWinManager.getOtherRemoteWindowCoords(windowId));
+        }
       }
     });
     _uniLinksSubscription = listenUniLinks();
