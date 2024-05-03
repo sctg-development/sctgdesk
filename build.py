@@ -111,6 +111,8 @@ def make_parser():
              'Available: PrivacyMode. Special value is "ALL" and empty "". Default is empty.')
     parser.add_argument('--flutter', action='store_true',
                         help='Build flutter package', default=False)
+    parser.add_argument('--disable-flutter-texture-render', action='store_true',
+                        help='Build flutter package', default=False)
     parser.add_argument(
         '--hwcodec',
         action='store_true',
@@ -131,16 +133,6 @@ def make_parser():
         '--unix-file-copy-paste',
         action='store_true',
         help='Build with unix file copy paste feature'
-    )
-    parser.add_argument(
-        '--flatpak',
-        action='store_true',
-        help='Build rustdesk libs with the flatpak feature enabled'
-    )
-    parser.add_argument(
-        '--appimage',
-        action='store_true',
-        help='Build rustdesk libs with the appimage feature enabled'
     )
     parser.add_argument(
         '--skip-cargo',
@@ -292,11 +284,8 @@ def get_features(args):
         features.append('vram')
     if args.flutter:
         features.append('flutter')
-        features.append('flutter_texture_render')
-    if args.flatpak:
-        features.append('flatpak')
-    if args.appimage:
-        features.append('appimage')
+        if not args.disable_flutter_texture_render:
+            features.append('flutter_texture_render')
     if args.unix_file_copy_paste:
         features.append('unix-file-copy-paste')
     if windows:
