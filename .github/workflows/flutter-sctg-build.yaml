@@ -283,7 +283,8 @@ jobs:
         job:
           - {
               target: x86_64-apple-darwin,
-              os: macos-latest,
+              #os: macos-latest,
+              os: macos-13,
               extra-build-args: "",
               arch: x86_64
             }
