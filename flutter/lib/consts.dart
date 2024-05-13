@@ -20,8 +20,10 @@ const String kPlatformAdditionsIsWayland = "is_wayland";
 const String kPlatformAdditionsHeadless = "headless";
 const String kPlatformAdditionsIsInstalled = "is_installed";
 const String kPlatformAdditionsIddImpl = "idd_impl";
-const String kPlatformAdditionsRustDeskVirtualDisplays = "rustdesk_virtual_displays";
-const String kPlatformAdditionsAmyuniVirtualDisplays = "amyuni_virtual_displays";
+const String kPlatformAdditionsRustDeskVirtualDisplays =
+    "rustdesk_virtual_displays";
+const String kPlatformAdditionsAmyuniVirtualDisplays =
+    "amyuni_virtual_displays";
 const String kPlatformAdditionsHasFileClipboard = "has_file_clipboard";
 const String kPlatformAdditionsSupportedPrivacyModeImpl =
     "supported_privacy_mode_impl";
@@ -152,9 +154,15 @@ const kDefaultScrollDuration = Duration(milliseconds: 50);
 const kDefaultMouseWheelThrottleDuration = Duration(milliseconds: 50);
 const kFullScreenEdgeSize = 0.0;
 const kMaximizeEdgeSize = 0.0;
-var kWindowEdgeSize = isWindows ? 1.0 : 5.0;
-const kWindowBorderWidth = 1.0;
+// Do not use kWindowEdgeSize directly. Use `windowEdgeSize` in `common.dart` instead.
+final kWindowEdgeSize = isWindows ? 1.0 : 5.0;
+final kWindowBorderWidth = isLinux ? 1.0 : 0.0;
 const kDesktopMenuPadding = EdgeInsets.only(left: 12.0, right: 3.0);
+const kFrameBorderRadius = 12.0;
+const kFrameClipRRectBorderRadius = 12.0;
+const kFrameBoxShadowBlurRadius = 32.0;
+const kFrameBoxShadowOffsetFocused = 4.0;
+const kFrameBoxShadowOffsetUnfocused = 2.0;
 
 const kInvalidValueStr = 'InvalidValueStr';
 
@@ -224,6 +232,7 @@ const kManageExternalStorage = "android.permission.MANAGE_EXTERNAL_STORAGE";
 const kRequestIgnoreBatteryOptimizations =
     "android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS";
 const kSystemAlertWindow = "android.permission.SYSTEM_ALERT_WINDOW";
+const kAndroid13Notification = "android.permission.POST_NOTIFICATIONS";
 
 /// Android channel invoke type key
 class AndroidChannel {

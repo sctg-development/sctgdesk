@@ -239,7 +239,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Empty", "Prazno"),
         ("Invalid folder name", "Pogrešno ime direktorijuma"),
         ("Socks5 Proxy", "Socks5 proksi"),
-          ("Socks5/Http(s) Proxy", "Socks5/Http(s) proksi"),
+        ("Socks5/Http(s) Proxy", "Socks5/Http(s) proksi"),
         ("Discovered", "Otkriveno"),
         ("install_daemon_tip", "Za pokretanje pri startu sistema, treba da instalirate sistemski servis."),
         ("Remote ID", "Udaljeni ID"),
@@ -605,5 +605,12 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("no_need_privacy_mode_no_physical_displays_tip", ""),
         ("Follow remote cursor", ""),
         ("Follow remote window focus", ""),
+        ("default_proxy_tip", ""),
+        ("no_audio_input_device_tip", ""),
+        ("Incoming", ""),
+        ("Outgoing", ""),
+        ("Clear Wayland screen selection", ""),
+        ("clear_Wayland_screen_selection_tip", ""),
+        ("confirm_clear_Wayland_screen_selection_tip", ""),
     ].iter().cloned().collect();
 }

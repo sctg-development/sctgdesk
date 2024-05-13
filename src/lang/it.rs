@@ -605,5 +605,12 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("no_need_privacy_mode_no_physical_displays_tip", "Nessun display fisico, nessuna necessità di usare la modalità privacy."),
         ("Follow remote cursor", "Segui cursore remoto"),
         ("Follow remote window focus", "Segui focus finestra remota"),
+        ("default_proxy_tip", "Protocollo e porta predefiniti sono Socks5 e 1080"),
+        ("no_audio_input_device_tip", "Nessun dispositivo input audio trovato."),
+        ("Incoming", "In entrata"),
+        ("Outgoing", "In uscita"),
+        ("Clear Wayland screen selection", "Annulla selezione schermata Wayland"),
+        ("clear_Wayland_screen_selection_tip", "Dopo aver annullato la selezione schermo, è possibile selezionare nuovamente lo schermo da condividere."),
+        ("confirm_clear_Wayland_screen_selection_tip", "Sei sicuro di voler annullare la selezione schermo Wayland?"),
     ].iter().cloned().collect();
 }

@@ -55,6 +55,12 @@ var isMobile = isAndroid || isIOS;
 var version = '';
 int androidVersion = 0;
 
+// Only used on Linux.
+// `windowManager.setResizable(false)` will reset the window size to the default size on Linux.
+// https://stackoverflow.com/questions/8193613/gtk-window-resize-disable-without-going-back-to-default
+// So we need to use this flag to enable/disable resizable.
+bool _linuxWindowResizable = true;
+
 /// only available for Windows target
 int windowsBuildNumber = 0;
 DesktopType? desktopType;
@@ -1572,7 +1578,7 @@ Future<void> saveWindowPosition(WindowType type, {int? windowId}) async {
       // `await windowManager.isMaximized()` will always return true
       // if is not resizable. The reason is unknown.
       //
-      // `windowManager.setResizable(!bind.isIncomingOnly());` in main.dart
+      // `setResizable(!bind.isIncomingOnly());` in main.dart
       isMaximized =
           bind.isIncomingOnly() ? false : await windowManager.isMaximized();
       position = await windowManager.getPosition();
@@ -3213,4 +3219,65 @@ Widget buildPresetPasswordWarning() {
       }
     },
   );
+}
+
+// https://github.com/leanflutter/window_manager/blob/87dd7a50b4cb47a375b9fc697f05e56eea0a2ab3/lib/src/widgets/virtual_window_frame.dart#L44
+Widget buildVirtualWindowFrame(BuildContext context, Widget child) {
+  boxShadow() => isMainDesktopWindow
+      ? <BoxShadow>[
+          if (stateGlobal.fullscreen.isFalse || stateGlobal.isMaximized.isFalse)
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              offset: Offset(
+                  0.0,
+                  stateGlobal.isFocused.isTrue
+                      ? kFrameBoxShadowOffsetFocused
+                      : kFrameBoxShadowOffsetUnfocused),
+              blurRadius: kFrameBoxShadowBlurRadius,
+            ),
+        ]
+      : null;
+  return Obx(
+    () => Container(
+      decoration: BoxDecoration(
+        color: isMainDesktopWindow
+            ? Colors.transparent
+            : Theme.of(context).colorScheme.background,
+        border: Border.all(
+          color: Theme.of(context).dividerColor,
+          width: stateGlobal.windowBorderWidth.value,
+        ),
+        borderRadius: BorderRadius.circular(
+          (stateGlobal.fullscreen.isTrue || stateGlobal.isMaximized.isTrue)
+              ? 0
+              : kFrameBorderRadius,
+        ),
+        boxShadow: boxShadow(),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(
+          (stateGlobal.fullscreen.isTrue || stateGlobal.isMaximized.isTrue)
+              ? 0
+              : kFrameClipRRectBorderRadius,
+        ),
+        child: child,
+      ),
+    ),
+  );
+}
+
+get windowEdgeSize => isLinux && !_linuxWindowResizable ? 0.0 : kWindowEdgeSize;
+
+// `windowManager.setResizable(false)` will reset the window size to the default size on Linux and then set unresizable.
+// See _linuxWindowResizable for more details.
+// So we use `setResizable()` instead of `windowManager.setResizable()`.
+//
+// We can only call `windowManager.setResizable(false)` if we need the default size on Linux.
+setResizable(bool resizable) {
+  if (isLinux) {
+    _linuxWindowResizable = resizable;
+    stateGlobal.refreshResizeEdgeSize();
+  } else {
+    windowManager.setResizable(resizable);
+  }
 }

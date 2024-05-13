@@ -605,5 +605,12 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("no_need_privacy_mode_no_physical_displays_tip", "Geen fysieke schermen, geen privémodus nodig."),
         ("Follow remote cursor", "Volg de cursor op afstand"),
         ("Follow remote window focus", "Volg de focus van het venster op afstand"),
+        ("default_proxy_tip", ""),
+        ("no_audio_input_device_tip", ""),
+        ("Incoming", ""),
+        ("Outgoing", ""),
+        ("Clear Wayland screen selection", ""),
+        ("clear_Wayland_screen_selection_tip", ""),
+        ("confirm_clear_Wayland_screen_selection_tip", ""),
     ].iter().cloned().collect();
 }

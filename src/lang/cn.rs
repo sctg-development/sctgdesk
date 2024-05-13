@@ -240,7 +240,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Invalid folder name", "无效文件夹名称"),
         ("Socks5 Proxy", "Socks5 代理"),
         ("Socks5/Http(s) Proxy", "Socks5/Http(s) 代理"),
-        ("Default protocol and port are Socks5 and 1080", "默认代理协议及端口为Socks5和1080"),
         ("Discovered", "已发现"),
         ("install_daemon_tip", "为了开机启动，请安装系统服务。"),
         ("Remote ID", "远程 ID"),
@@ -606,5 +605,12 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("no_need_privacy_mode_no_physical_displays_tip", "没有物理显示器，没必要使用隐私模式。"),
         ("Follow remote cursor", "跟随远程光标"),
         ("Follow remote window focus", "跟随远程窗口焦点"),
+        ("default_proxy_tip", "默认代理协议及端口为 Socks5 和 1080"),
+        ("no_audio_input_device_tip", "未找到音频输入设备"),
+        ("Incoming", "被控"),
+        ("Outgoing", "主控"),
+        ("Clear Wayland screen selection", "清除 Wayland 的屏幕选择"),
+        ("clear_Wayland_screen_selection_tip", "清除 Wayland 的屏幕选择后，您可以重新选择分享的屏幕。"),
+        ("confirm_clear_Wayland_screen_selection_tip", "是否确认清除 Wayland 的分享屏幕选择？"),
     ].iter().cloned().collect();
 }

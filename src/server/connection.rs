@@ -57,7 +57,7 @@ use std::{
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use system_shutdown;
 
-#[cfg(all(windows, feature = "virtual_display_driver"))]
+#[cfg(windows)]
 use crate::virtual_display_manager;
 #[cfg(not(any(target_os = "ios")))]
 use std::collections::HashSet;
@@ -231,8 +231,7 @@ pub struct Connection {
     auto_disconnect_timer: Option<(Instant, u64)>,
     authed_conn_id: Option<self::raii::AuthedConnID>,
     file_remove_log_control: FileRemoveLogControl,
-    #[cfg(feature = "vram")]
-    supported_encoding_flag: (bool, Option<bool>),
+    last_supported_encoding: Option<SupportedEncoding>,
     services_subed: bool,
     delayed_read_dir: Option<(String, bool)>,
     #[cfg(target_os = "macos")]
@@ -386,8 +385,7 @@ impl Connection {
             auto_disconnect_timer: None,
             authed_conn_id: None,
             file_remove_log_control: FileRemoveLogControl::new(id),
-            #[cfg(feature = "vram")]
-            supported_encoding_flag: (false, None),
+            last_supported_encoding: None,
             services_subed: false,
             delayed_read_dir: None,
             #[cfg(target_os = "macos")]
@@ -1136,7 +1134,6 @@ impl Connection {
                 "is_installed".into(),
                 json!(crate::platform::is_installed()),
             );
-            #[cfg(feature = "virtual_display_driver")]
             if crate::platform::is_installed() {
                 platform_additions.extend(virtual_display_manager::get_platform_additions());
             }
@@ -1161,10 +1158,6 @@ impl Connection {
         if !platform_additions.is_empty() {
             pi.platform_additions = serde_json::to_string(&platform_additions).unwrap_or("".into());
         }
-
-        let supported_encoding = scrap::codec::Encoder::supported_encoding();
-        log::info!("peer info supported_encoding: {:?}", supported_encoding);
-        pi.encoding = Some(supported_encoding).into();
 
         if self.port_forward_socket.is_some() {
             let mut msg_out = Message::new();
@@ -1229,10 +1222,22 @@ impl Connection {
         if self.file_transfer.is_some() {
             res.set_peer_info(pi);
         } else {
+            let supported_encoding = scrap::codec::Encoder::supported_encoding();
+            self.last_supported_encoding = Some(supported_encoding.clone());
+            log::info!("peer info supported_encoding: {:?}", supported_encoding);
+            pi.encoding = Some(supported_encoding).into();
+            if let Some(msg_out) = super::display_service::is_inited_msg() {
+                self.send(msg_out).await;
+            }
+
             #[cfg(not(any(target_os = "android", target_os = "ios")))]
             {
+                #[cfg(not(windows))]
+                let displays = display_service::try_get_displays();
+                #[cfg(windows)]
+                let displays = display_service::try_get_displays_add_amyuni_headless();
                 pi.resolutions = Some(SupportedResolutions {
-                    resolutions: display_service::try_get_displays()
+                    resolutions: displays
                         .map(|displays| {
                             displays
                                 .get(self.display_idx)
@@ -1246,9 +1251,6 @@ impl Connection {
             }
 
             try_activate_screen();
-            if let Some(msg_out) = super::video_service::is_inited_msg() {
-                self.send(msg_out).await;
-            }
 
             match super::display_service::update_get_sync_displays().await {
                 Err(err) => {
@@ -2206,7 +2208,7 @@ impl Connection {
                         let set = displays.set.iter().map(|d| *d as usize).collect::<Vec<_>>();
                         self.capture_displays(&add, &sub, &set).await;
                     }
-                    #[cfg(all(windows, feature = "virtual_display_driver"))]
+                    #[cfg(windows)]
                     Some(misc::Union::ToggleVirtualDisplay(t)) => {
                         self.toggle_virtual_display(t).await;
                     }
@@ -2594,7 +2596,7 @@ impl Connection {
         }
     }
 
-    #[cfg(all(windows, feature = "virtual_display_driver"))]
+    #[cfg(windows)]
     async fn toggle_virtual_display(&mut self, t: ToggleVirtualDisplay) {
         let make_msg = |text: String| {
             let mut msg_out = Message::new();
@@ -2651,7 +2653,7 @@ impl Connection {
                 let display_idx = d.unwrap_or(self.display_idx);
                 if let Some(display) = displays.get(display_idx) {
                     let name = display.name();
-                    #[cfg(all(windows, feature = "virtual_display_driver"))]
+                    #[cfg(windows)]
                     if let Some(_ok) =
                         virtual_display_manager::rustdesk_idd::change_resolution_if_is_virtual_display(
                             &name,
@@ -2662,7 +2664,7 @@ impl Connection {
                         return;
                     }
                     let mut record_changed = true;
-                    #[cfg(all(windows, feature = "virtual_display_driver"))]
+                    #[cfg(windows)]
                     if virtual_display_manager::amyuni_idd::is_my_display(&name) {
                         record_changed = false;
                     }
@@ -3136,22 +3138,34 @@ impl Connection {
             .map(|t| t.0 = Instant::now());
     }
 
-    #[cfg(feature = "vram")]
     fn update_supported_encoding(&mut self) {
-        let not_use = Some(scrap::vram::VRamEncoder::not_use());
-        if !self.authorized
-            || self.supported_encoding_flag.0 && self.supported_encoding_flag.1 == not_use
-        {
+        let Some(last) = &self.last_supported_encoding else {
             return;
-        }
-        let mut misc: Misc = Misc::new();
-        let supported_encoding = scrap::codec::Encoder::supported_encoding();
-        log::info!("update supported encoding: {:?}", supported_encoding);
-        misc.set_supported_encoding(supported_encoding);
-        let mut msg = Message::new();
-        msg.set_misc(misc);
-        self.inner.send(msg.into());
-        self.supported_encoding_flag = (true, not_use);
+        };
+        let usable = scrap::codec::Encoder::usable_encoding();
+        let Some(usable) = usable else {
+            return;
+        };
+        if usable.vp8 != last.vp8
+            || usable.av1 != last.av1
+            || usable.h264 != last.h264
+            || usable.h265 != last.h265
+        {
+            let mut misc: Misc = Misc::new();
+            let supported_encoding = SupportedEncoding {
+                vp8: usable.vp8,
+                av1: usable.av1,
+                h264: usable.h264,
+                h265: usable.h265,
+                ..last.clone()
+            };
+            log::info!("update supported encoding: {:?}", supported_encoding);
+            self.last_supported_encoding = Some(supported_encoding.clone());
+            misc.set_supported_encoding(supported_encoding);
+            let mut msg = Message::new();
+            msg.set_misc(misc);
+            self.inner.send(msg.into());
+        };
     }
 
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -3720,8 +3734,10 @@ mod raii {
                 }
                 #[cfg(not(any(target_os = "android", target_os = "ios")))]
                 display_service::reset_resolutions();
-                #[cfg(all(windows, feature = "virtual_display_driver"))]
+                #[cfg(windows)]
                 let _ = virtual_display_manager::reset_all();
+                #[cfg(target_os = "linux")]
+                scrap::wayland::pipewire::try_close_session();
             }
             Self::check_wake_lock();
         }

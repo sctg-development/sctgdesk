@@ -10,6 +10,7 @@ use jni::{
 
 use jni::errors::{Error as JniError, Result as JniResult};
 use lazy_static::lazy_static;
+use serde::Deserialize;
 use std::ops::Not;
 use std::sync::atomic::{AtomicPtr, Ordering::SeqCst};
 use std::sync::{Mutex, RwLock};
@@ -20,6 +21,7 @@ lazy_static! {
     static ref VIDEO_RAW: Mutex<FrameRaw> = Mutex::new(FrameRaw::new("video", MAX_VIDEO_FRAME_TIMEOUT));
     static ref AUDIO_RAW: Mutex<FrameRaw> = Mutex::new(FrameRaw::new("audio", MAX_AUDIO_FRAME_TIMEOUT));
     static ref NDK_CONTEXT_INITED: Mutex<bool> = Default::default();
+    static ref MEDIA_CODEC_INFOS: RwLock<Option<MediaCodecInfos>> = RwLock::new(None);
 }
 
 const MAX_VIDEO_FRAME_TIMEOUT: Duration = Duration::from_millis(100);
@@ -48,6 +50,8 @@ impl FrameRaw {
 
     fn set_enable(&mut self, value: bool) {
         self.enable = value;
+        self.ptr.store(std::ptr::null_mut(), SeqCst);
+        self.len = 0;
     }
 
     fn update(&mut self, data: *mut u8, len: usize) {
@@ -141,11 +145,7 @@ pub extern "system" fn Java_ffi_FFI_setFrameRawEnable(
 }
 
 #[no_mangle]
-pub extern "system" fn Java_ffi_FFI_init(
-    env: JNIEnv,
-    _class: JClass,
-    ctx: JObject,
-) {
+pub extern "system" fn Java_ffi_FFI_init(env: JNIEnv, _class: JClass, ctx: JObject) {
     log::debug!("MainService init from java");
     if let Ok(jvm) = env.get_java_vm() {
         *JVM.write().unwrap() = Some(jvm);
@@ -154,6 +154,50 @@ pub extern "system" fn Java_ffi_FFI_init(
             init_ndk_context().ok();
         }
     }
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct MediaCodecInfo {
+    pub name: String,
+    pub is_encoder: bool,
+    #[serde(default)]
+    pub hw: Option<bool>, // api 29+
+    pub mime_type: String,
+    pub surface: bool,
+    pub nv12: bool,
+    #[serde(default)]
+    pub low_latency: Option<bool>, // api 30+, decoder
+    pub min_bitrate: u32,
+    pub max_bitrate: u32,
+    pub min_width: usize,
+    pub max_width: usize,
+    pub min_height: usize,
+    pub max_height: usize,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct MediaCodecInfos {
+    pub version: usize,
+    pub codecs: Vec<MediaCodecInfo>,
+}
+
+#[no_mangle]
+pub extern "system" fn Java_ffi_FFI_setCodecInfo(env: JNIEnv, _class: JClass, info: JString) {
+    let mut env = env;
+    if let Ok(info) = env.get_string(&info) {
+        let info: String = info.into();
+        if let Ok(infos) = serde_json::from_str::<MediaCodecInfos>(&info) {
+            *MEDIA_CODEC_INFOS.write().unwrap() = Some(infos);
+        }
+    }
+}
+
+pub fn get_codec_info() -> Option<MediaCodecInfos> {
+    MEDIA_CODEC_INFOS.read().unwrap().as_ref().cloned()
+}
+
+pub fn clear_codec_info() {
+    *MEDIA_CODEC_INFOS.write().unwrap() = None;
 }
 
 pub fn call_main_service_pointer_input(kind: &str, mask: i32, x: i32, y: i32) -> JniResult<()> {

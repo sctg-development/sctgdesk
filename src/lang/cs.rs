@@ -605,5 +605,12 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("no_need_privacy_mode_no_physical_displays_tip", "Žádné fyzické displeje, není třeba používat režim soukromí."),
         ("Follow remote cursor", "Sledovat dálkový kurzor"),
         ("Follow remote window focus", "Sledovat zaměření vzdáleného okna"),
+        ("default_proxy_tip", "Výchozí protokol a port jsou Socks5 a 1080"),
+        ("no_audio_input_device_tip", "Nebylo nalezeno žádné vstupní zvukové zařízení."),
+        ("Incoming", "Příchozí"),
+        ("Outgoing", "Odchozí"),
+        ("Clear Wayland screen selection", "Vymazat výběr obrazovky Wayland"),
+        ("clear_Wayland_screen_selection_tip", "Po vymazání výběru obrazovky můžete znovu vybrat obrazovku, kterou chcete sdílet."),
+        ("confirm_clear_Wayland_screen_selection_tip", "Opravdu chcete vymazat výběr obrazovky Wayland?"),
     ].iter().cloned().collect();
 }
