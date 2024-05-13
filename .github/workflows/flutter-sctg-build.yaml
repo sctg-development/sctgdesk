@@ -453,7 +453,8 @@ jobs:
           - {
               arch: aarch64,
               target: aarch64-apple-ios,
-              os: macos-latest,
+              #os: macos-latest,
+              os: macos-13,
               extra-build-features: "",
             }
     steps:
