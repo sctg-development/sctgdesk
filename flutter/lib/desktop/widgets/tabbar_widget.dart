@@ -323,11 +323,11 @@ class DesktopTab extends StatelessWidget {
     return buildRemoteBlock(
         child: child,
         use: () async {
-          var access_mode = await bind.mainGetOption(key: 'access-mode');
+          var access_mode = await bind.mainGetOption(key: kOptionAccessMode);
           var option = option2bool(
-              'allow-remote-config-modification',
+              kOptionAllowRemoteConfigModification,
               await bind.mainGetOption(
-                  key: 'allow-remote-config-modification'));
+                  key: kOptionAllowRemoteConfigModification));
           return access_mode == 'view' || (access_mode.isEmpty && !option);
         });
   }
@@ -812,9 +812,9 @@ Future<bool> closeConfirmDialog() async {
   var confirm = true;
   final res = await gFFI.dialogManager.show<bool>((setState, close, context) {
     submit() {
-      final opt = "enable-confirm-closing-tabs";
-      String value = bool2option(opt, confirm);
-      bind.mainSetLocalOption(key: opt, value: value);
+      String value = bool2option(kOptionEnableConfirmClosingTabs, confirm);
+      bind.mainSetLocalOption(
+          key: kOptionEnableConfirmClosingTabs, value: value);
       close(true);
     }
 

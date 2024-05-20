@@ -971,6 +971,12 @@ pub async fn test_rendezvous_server() -> ResultType<()> {
 }
 
 #[tokio::main(flavor = "current_thread")]
+pub async fn test_ipc_connection() -> ResultType<()> {
+    connect(1000, "").await?;
+    Ok(())
+}
+
+#[tokio::main(flavor = "current_thread")]
 pub async fn send_url_scheme(url: String) -> ResultType<()> {
     connect(1_000, "_url")
         .await?

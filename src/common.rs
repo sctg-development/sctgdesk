@@ -1,5 +1,6 @@
 use std::{
     borrow::Cow,
+    collections::HashMap,
     future::Future,
     sync::{Arc, Mutex, RwLock},
     task::Poll,
@@ -1573,6 +1574,56 @@ pub fn load_custom_client() {
     }
 }
 
+fn read_custom_client_advanced_settings(
+    settings: serde_json::Value,
+    map_display_settings: &HashMap<String, &&str>,
+    map_local_settings: &HashMap<String, &&str>,
+    map_settings: &HashMap<String, &&str>,
+    is_override: bool,
+) {
+    let mut display_settings = if is_override {
+        config::OVERWRITE_DISPLAY_SETTINGS.write().unwrap()
+    } else {
+        config::DEFAULT_DISPLAY_SETTINGS.write().unwrap()
+    };
+    let mut local_settings = if is_override {
+        config::OVERWRITE_LOCAL_SETTINGS.write().unwrap()
+    } else {
+        config::DEFAULT_LOCAL_SETTINGS.write().unwrap()
+    };
+    let mut server_settings = if is_override {
+        config::OVERWRITE_SETTINGS.write().unwrap()
+    } else {
+        config::DEFAULT_SETTINGS.write().unwrap()
+    };
+    if let Some(settings) = settings.as_object() {
+        for (k, v) in settings {
+            let Some(v) = v.as_str() else {
+                continue;
+            };
+            if let Some(k2) = map_display_settings.get(k) {
+                display_settings.insert(k2.to_string(), v.to_owned());
+            } else if let Some(k2) = map_local_settings.get(k) {
+                local_settings.insert(k2.to_string(), v.to_owned());
+            } else if let Some(k2) = map_settings.get(k) {
+                server_settings.insert(k2.to_string(), v.to_owned());
+            } else {
+                let k2 = k.replace("_", "-");
+                let k = k2.replace("-", "_");
+                // display
+                display_settings.insert(k.clone(), v.to_owned());
+                display_settings.insert(k2.clone(), v.to_owned());
+                // local
+                local_settings.insert(k.clone(), v.to_owned());
+                local_settings.insert(k2.clone(), v.to_owned());
+                // server
+                server_settings.insert(k.clone(), v.to_owned());
+                server_settings.insert(k2.clone(), v.to_owned());
+            }
+        }
+    }
+}
+
 pub fn read_custom_client(config: &str) {
     let Ok(data) = decode64(config) else {
         log::error!("Failed to decode custom client config");
@@ -1599,55 +1650,36 @@ pub fn read_custom_client(config: &str) {
             *config::APP_NAME.write().unwrap() = app_name.to_owned();
         }
     }
+
+    let mut map_display_settings = HashMap::new();
+    for s in config::keys::KEYS_DISPLAY_SETTINGS {
+        map_display_settings.insert(s.replace("_", "-"), s);
+    }
+    let mut map_local_settings = HashMap::new();
+    for s in config::keys::KEYS_LOCAL_SETTINGS {
+        map_local_settings.insert(s.replace("_", "-"), s);
+    }
+    let mut map_settings = HashMap::new();
+    for s in config::keys::KEYS_SETTINGS {
+        map_settings.insert(s.replace("_", "-"), s);
+    }
     if let Some(default_settings) = data.remove("default-settings") {
-        if let Some(default_settings) = default_settings.as_object() {
-            for (k, v) in default_settings {
-                let Some(v) = v.as_str() else {
-                    continue;
-                };
-                if k.starts_with("$$") {
-                    config::DEFAULT_DISPLAY_SETTINGS
-                        .write()
-                        .unwrap()
-                        .insert(k.clone(), v[2..].to_owned());
-                } else if k.starts_with("$") {
-                    config::DEFAULT_LOCAL_SETTINGS
-                        .write()
-                        .unwrap()
-                        .insert(k.clone(), v[1..].to_owned());
-                } else {
-                    config::DEFAULT_SETTINGS
-                        .write()
-                        .unwrap()
-                        .insert(k.clone(), v.to_owned());
-                }
-            }
-        }
+        read_custom_client_advanced_settings(
+            default_settings,
+            &map_display_settings,
+            &map_local_settings,
+            &map_settings,
+            false,
+        );
     }
     if let Some(overwrite_settings) = data.remove("override-settings") {
-        if let Some(overwrite_settings) = overwrite_settings.as_object() {
-            for (k, v) in overwrite_settings {
-                let Some(v) = v.as_str() else {
-                    continue;
-                };
-                if k.starts_with("$$") {
-                    config::OVERWRITE_DISPLAY_SETTINGS
-                        .write()
-                        .unwrap()
-                        .insert(k.clone(), v[2..].to_owned());
-                } else if k.starts_with("$") {
-                    config::OVERWRITE_LOCAL_SETTINGS
-                        .write()
-                        .unwrap()
-                        .insert(k.clone(), v[1..].to_owned());
-                } else {
-                    config::OVERWRITE_SETTINGS
-                        .write()
-                        .unwrap()
-                        .insert(k.clone(), v.to_owned());
-                }
-            }
-        }
+        read_custom_client_advanced_settings(
+            overwrite_settings,
+            &map_display_settings,
+            &map_local_settings,
+            &map_settings,
+            true,
+        );
     }
     for (k, v) in data {
         if let Some(v) = v.as_str() {

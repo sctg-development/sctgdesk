@@ -445,8 +445,17 @@ abstract class MenuEntrySwitchBase<T> extends MenuEntryBase<T> {
           dismissCallback: dismissCallback,
         );
 
+  bool get isEnabled => enabled?.value ?? true;
+
   RxBool get curOption;
   Future<void> setOption(bool? option);
+
+  tryPop(BuildContext context) {
+    if (dismissOnClicked && Navigator.canPop(context)) {
+      Navigator.pop(context);
+      super.dismissCallback?.call();
+    }
+  }
 
   @override
   List<mod_menu.PopupMenuEntry<T>> build(
@@ -481,44 +490,33 @@ abstract class MenuEntrySwitchBase<T> extends MenuEntryBase<T> {
                             if (switchType == SwitchType.sswitch) {
                               return Switch(
                                 value: curOption.value,
-                                onChanged: (v) {
-                                  if (super.dismissOnClicked &&
-                                      Navigator.canPop(context)) {
-                                    Navigator.pop(context);
-                                    if (super.dismissCallback != null) {
-                                      super.dismissCallback!();
-                                    }
-                                  }
-                                  setOption(v);
-                                },
+                                onChanged: isEnabled
+                                    ? (v) {
+                                        tryPop(context);
+                                        setOption(v);
+                                      }
+                                    : null,
                               );
                             } else {
                               return Checkbox(
                                 value: curOption.value,
-                                onChanged: (v) {
-                                  if (super.dismissOnClicked &&
-                                      Navigator.canPop(context)) {
-                                    Navigator.pop(context);
-                                    if (super.dismissCallback != null) {
-                                      super.dismissCallback!();
-                                    }
-                                  }
-                                  setOption(v);
-                                },
+                                onChanged: isEnabled
+                                    ? (v) {
+                                        tryPop(context);
+                                        setOption(v);
+                                      }
+                                    : null,
                               );
                             }
                           })),
                     ))
                   ])),
-              onPressed: () {
-                if (super.dismissOnClicked && Navigator.canPop(context)) {
-                  Navigator.pop(context);
-                  if (super.dismissCallback != null) {
-                    super.dismissCallback!();
-                  }
-                }
-                setOption(!curOption.value);
-              },
+              onPressed: isEnabled
+                  ? () {
+                      tryPop(context);
+                      setOption(!curOption.value);
+                    }
+                  : null,
             )),
       )
     ];
