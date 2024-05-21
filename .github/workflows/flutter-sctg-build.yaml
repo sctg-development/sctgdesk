@@ -1281,7 +1281,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: ${{ secrets.CLOUDFLARE_PROJECT_NAME }}-debug
-          directory: flutter/build/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ env.RELEASE_NAME }} # e.g. 'dist'
+          directory: flutter/build/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ env.RELEASE_NAME }}-debug # e.g. 'dist'
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
   build-rustdesk-web:
