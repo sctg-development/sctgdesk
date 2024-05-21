@@ -662,7 +662,7 @@ jobs:
               target: x86_64-unknown-linux-gnu,
               os: ubuntu-20.04,
               extra-build-features: "",
-              enable-headless: true
+              enable-headless: false
             }
           - {
               arch: x86_64,
