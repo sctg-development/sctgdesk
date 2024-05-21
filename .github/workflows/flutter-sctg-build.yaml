@@ -1239,6 +1239,8 @@ jobs:
           mv web "${dir_name}" && tar czf "${dir_name}".tar.gz "${dir_name}"
           cd "${dir_name}"
           zip -9 -r "../${dir_name}".zip .
+          cd ..
+          
           # debug now
           dir_name_debug="${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ env.RELEASE_NAME }}-debug"
           mv web-debug/index.html web-debug/sctgdesk.html
