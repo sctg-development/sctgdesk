@@ -703,7 +703,8 @@ class RustdeskImpl {
   }
 
   String mainGetAppNameSync({dynamic hint}) {
-    throw UnimplementedError();
+    return "SCTGDesk";
+    //throw UnimplementedError();
   }
 
   String mainUriPrefixSync({dynamic hint}) {
@@ -1611,7 +1612,8 @@ class RustdeskImpl {
   }
 
   bool mainIsOptionFixed({required String key, dynamic hint}) {
-    throw UnimplementedError();
+    return false;
+    //throw UnimplementedError();
   }
 
   void dispose() {}
