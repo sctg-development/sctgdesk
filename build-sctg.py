@@ -610,6 +610,7 @@ def build_web_app():
     os.chdir('../..')
     system2('flutter pub upgrade')
     system2('flutter build web --release --source-maps')
+    system2('flutter build web --source-maps --profile --dart-define=Dart2jsOptimization=O0 --dart2js-optimization=O1 -o build/web-debug')
     os.chdir("..")
 
 def build_flutter_arch_manjaro(version, features):

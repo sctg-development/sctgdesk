@@ -850,18 +850,18 @@ jobs:
               os: ubuntu-20.04,
               extra-build-features: "",
             }
-          - {
-              arch: x86_64,
-              target: x86_64-unknown-linux-gnu,
-              os: ubuntu-20.04,
-              extra-build-features: "flatpak",
-            }
-          - {
-              arch: x86_64,
-              target: x86_64-unknown-linux-gnu,
-              os: ubuntu-20.04,
-              extra-build-features: "appimage",
-            }
+          # - {
+          #     arch: x86_64,
+          #     target: x86_64-unknown-linux-gnu,
+          #     os: ubuntu-20.04,
+          #     extra-build-features: "flatpak",
+          #   }
+          # - {
+          #     arch: x86_64,
+          #     target: x86_64-unknown-linux-gnu,
+          #     os: ubuntu-20.04,
+          #     extra-build-features: "appimage",
+          #   }
           # - { target: x86_64-unknown-linux-musl   , os: ubuntu-20.04, use-cross: true }
     steps:
       - name: Checkout source code
@@ -1236,10 +1236,12 @@ jobs:
           dir_name="${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ env.RELEASE_NAME }}"
           mv web/index.html web/sctgdesk.html
           mv web/client.html web/index.html
+          mv web-debug web/debug
           mv web "${dir_name}" && tar czf "${dir_name}".tar.gz "${dir_name}"
           cd "${dir_name}"
           zip -9 -r "../${dir_name}".zip .
           cd ..
+          
           sha256sum "${dir_name}".tar.gz
           popd
 
