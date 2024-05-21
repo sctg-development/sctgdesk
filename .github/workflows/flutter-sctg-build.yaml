@@ -1236,13 +1236,20 @@ jobs:
           dir_name="${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ env.RELEASE_NAME }}"
           mv web/index.html web/sctgdesk.html
           mv web/client.html web/index.html
-          mv web-debug web/debug
           mv web "${dir_name}" && tar czf "${dir_name}".tar.gz "${dir_name}"
           cd "${dir_name}"
           zip -9 -r "../${dir_name}".zip .
+          # debug now
+          dir_name_debug="${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ env.RELEASE_NAME }}-debug"
+          mv web-debug/index.html web-debug/sctgdesk.html
+          mv web-debug/client.html web-debug/index.html
+          mv web-debug "${dir_name_debug}" && tar czf "${dir_name_debug}".tar.gz "${dir_name_debug}"
+          cd "${dir_name_debug}"
+          zip -9 -r "../${dir_name_debug}".zip .
           cd ..
           
           sha256sum "${dir_name}".tar.gz
+          sha256sum "${dir_name_debug}".tar.gz
           popd
 
       - name: Download, install mc and copy web files to S3
@@ -1262,6 +1269,16 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: ${{ secrets.CLOUDFLARE_PROJECT_NAME }}
+          directory: flutter/build/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ env.RELEASE_NAME }} # e.g. 'dist'
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish debug to Cloudflare Pages
+        uses: sctg-development/pages-action-without-url@main
+        continue-on-error: true
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: ${{ secrets.CLOUDFLARE_PROJECT_NAME }}-debug
           directory: flutter/build/${{ env.APP_NAME_LOW }}-${{ env.VERSION }}-${{ env.RELEASE_NAME }} # e.g. 'dist'
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
