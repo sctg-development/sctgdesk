@@ -2270,7 +2270,7 @@ void changeSocks5Proxy() async {
                 Expanded(
                   child: TextField(
                     controller: userController,
-                    enabled: isInProgress,
+                    enabled: !isOptFixed,
                   ),
                 ),
               ],
