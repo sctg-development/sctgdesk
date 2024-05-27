@@ -237,6 +237,8 @@ class _RemotePageState extends State<RemotePage>
     _ffi.inputModel.enterOrLeave(false);
     DesktopMultiWindow.removeListener(this);
     _ffi.dialogManager.hideMobileActionsOverlay();
+    _ffi.imageModel.disposeImage();
+    _ffi.cursorModel.disposeImages();
     _ffi.recordingModel.onClose();
     _rawKeyFocusNode.dispose();
     await _ffi.close(closeSession: closeSession);
@@ -277,7 +279,7 @@ class _RemotePageState extends State<RemotePage>
       return Stack(
         children: [
           Container(
-              color: Colors.black,
+              color: kColorCanvas,
               child: RawKeyFocusScope(
                   focusNode: _rawKeyFocusNode,
                   onFocusChange: (bool imageFocused) {
