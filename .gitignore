@@ -55,3 +55,6 @@ vcpkg_installed
 .env
 rustdesk.json
 sctgdesk.yaml
+
+flutter/lib/generated_plugin_registrant.dart
+libsciter.dylib

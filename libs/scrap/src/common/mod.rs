@@ -88,6 +88,11 @@ impl ImageRgb {
     pub fn stride(&self) -> usize {
         self.stride
     }
+
+    #[inline]
+    pub fn set_stride(&mut self, stride: usize) {
+        self.stride = stride;
+    }
 }
 
 #[inline]
@@ -480,4 +485,9 @@ pub trait GoogleImage {
             (y, u, v)
         }
     }
+}
+
+#[cfg(target_os = "android")]
+pub fn screen_size() -> (u16, u16, u16) {
+    SCREEN_SIZE.lock().unwrap().clone()
 }
