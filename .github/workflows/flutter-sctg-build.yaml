@@ -668,14 +668,14 @@ jobs:
               arch: x86_64,
               target: x86_64-unknown-linux-gnu,
               os: ubuntu-20.04,
-              extra-build-features: "flatpak",
+              extra-build-features: "",
               enable-headless: false
             }
           - {
               arch: x86_64,
               target: x86_64-unknown-linux-gnu,
               os: ubuntu-20.04,
-              extra-build-features: "appimage",
+              extra-build-features: "",
               enable-headless: false
             }
           # - { target: x86_64-unknown-linux-musl   , os: ubuntu-20.04, use-cross: true }
