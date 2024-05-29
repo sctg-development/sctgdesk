@@ -662,6 +662,7 @@ jobs:
               target: x86_64-unknown-linux-gnu,
               os: ubuntu-20.04,
               extra-build-features: "",
+              build-name: "standard",
               enable-headless: false
             }
           - {
@@ -669,6 +670,7 @@ jobs:
               target: x86_64-unknown-linux-gnu,
               os: ubuntu-20.04,
               extra-build-features: "",
+              build-name: "flatpak",
               enable-headless: false
             }
           - {
@@ -676,6 +678,7 @@ jobs:
               target: x86_64-unknown-linux-gnu,
               os: ubuntu-20.04,
               extra-build-features: "",
+              build-name: "appimage",
               enable-headless: false
             }
           # - { target: x86_64-unknown-linux-musl   , os: ubuntu-20.04, use-cross: true }
@@ -831,7 +834,7 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@master
         with:
-          name: librustdesk-${{ matrix.job.arch }}-${{ matrix.job.extra-build-features }}.so
+          name: librustdesk-${{ matrix.job.arch }}-${{ matrix.job.build-name }}.so
           path: target/release/liblibrustdesk.so
 
   build-rustdesk-linux-amd64:
@@ -888,7 +891,7 @@ jobs:
       - name: Restore the rustdesk lib file
         uses: actions/download-artifact@master
         with:
-          name: librustdesk-${{ matrix.job.arch }}-${{ matrix.job.extra-build-features }}.so
+          name: librustdesk-${{ matrix.job.arch }}-${{ matrix.job.build-name }}.so
           path: ./target/release/
 
       - uses: rustdesk-org/run-on-arch-action@amd64-support
