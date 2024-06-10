@@ -36,9 +36,11 @@ class SettingsPage extends StatefulWidget implements PageShape {
 const url = 'https://rustdesk.com/';
 
 class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
-  final _hasIgnoreBattery = androidVersion >= 26;
+  final _hasIgnoreBattery =
+      false; //androidVersion >= 26; // remove because not work on every device
   var _ignoreBatteryOpt = false;
   var _enableStartOnBoot = false;
+  var _floatingWindowDisabled = false;
   var _enableAbr = false;
   var _denyLANDiscovery = false;
   var _onlyWhiteList = false;
@@ -86,6 +88,14 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
         _enableStartOnBoot = enableStartOnBoot;
       }
 
+      var floatingWindowDisabled =
+          bind.mainGetLocalOption(key: kOptionDisableFloatingWindow) == "Y" ||
+              !await AndroidPermissionManager.check(kSystemAlertWindow);
+      if (floatingWindowDisabled != _floatingWindowDisabled) {
+        update = true;
+        _floatingWindowDisabled = floatingWindowDisabled;
+      }
+
       final enableAbrRes = option2bool(
           kOptionEnableAbr, await bind.mainGetOption(key: kOptionEnableAbr));
       if (enableAbrRes != _enableAbr) {
@@ -93,8 +103,8 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
         _enableAbr = enableAbrRes;
       }
 
-      final denyLanDiscovery = !option2bool('enable-lan-discovery',
-          await bind.mainGetOption(key: 'enable-lan-discovery'));
+      final denyLanDiscovery = !option2bool(kOptionEnableLanDiscovery,
+          await bind.mainGetOption(key: kOptionEnableLanDiscovery));
       if (denyLanDiscovery != _denyLANDiscovery) {
         update = true;
         _denyLANDiscovery = denyLanDiscovery;
@@ -301,10 +311,8 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
         onToggle: isOptionFixed(kOptionEnableAbr)
             ? null
             : (v) async {
-                await bind.mainSetOption(
-                    key: kOptionEnableAbr, value: v ? defaultOptionYes : "N");
-                final newValue =
-                    await bind.mainGetOption(key: kOptionEnableAbr) != "N";
+                await mainSetBoolOption(kOptionEnableAbr, v);
+                final newValue = await mainGetBoolOption(kOptionEnableAbr);
                 setState(() {
                   _enableAbr = newValue;
                 });
@@ -316,12 +324,9 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
         onToggle: isOptionFixed(kOptionEnableRecordSession)
             ? null
             : (v) async {
-                await bind.mainSetOption(
-                    key: kOptionEnableRecordSession,
-                    value: v ? defaultOptionYes : "N");
+                await mainSetBoolOption(kOptionEnableRecordSession, v);
                 final newValue =
-                    await bind.mainGetOption(key: kOptionEnableRecordSession) !=
-                        "N";
+                    await mainGetBoolOption(kOptionEnableRecordSession);
                 setState(() {
                   _enableRecordSession = newValue;
                 });
@@ -493,6 +498,32 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
           gFFI.invokeMethod(AndroidChannel.kSetStartOnBootOpt, toValue);
         }));
 
+    onFloatingWindowChanged(bool toValue) async {
+      if (toValue) {
+        if (!await AndroidPermissionManager.check(kSystemAlertWindow)) {
+          if (!await AndroidPermissionManager.request(kSystemAlertWindow)) {
+            return;
+          }
+        }
+      }
+      final disable = !toValue;
+      bind.mainSetLocalOption(
+          key: kOptionDisableFloatingWindow,
+          value: disable ? 'Y' : defaultOptionNo);
+      setState(() => _floatingWindowDisabled = disable);
+    }
+
+    enhancementsTiles.add(SettingsTile.switchTile(
+        initialValue: !_floatingWindowDisabled,
+        title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(translate('Floating window')),
+          Text('* ${translate('floating_window_tip')}',
+              style: Theme.of(context).textTheme.bodySmall),
+        ]),
+        onToggle: bind.mainIsOptionFixed(key: kOptionDisableFloatingWindow)
+            ? null
+            : onFloatingWindowChanged));
+
     final disabledSettings = bind.isDisableSettings();
     final settings = SettingsList(
       sections: [
@@ -551,12 +582,9 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
               onToggle: isOptionFixed(kOptionEnableHwcodec)
                   ? null
                   : (v) async {
-                      await bind.mainSetOption(
-                          key: kOptionEnableHwcodec,
-                          value: v ? defaultOptionYes : "N");
+                      await mainSetBoolOption(kOptionEnableHwcodec, v);
                       final newValue =
-                          await bind.mainGetOption(key: kOptionEnableHwcodec) !=
-                              "N";
+                          await mainGetBoolOption(kOptionEnableHwcodec);
                       setState(() {
                         _enableHardwareCodec = newValue;
                       });

@@ -18,6 +18,7 @@ import 'package:flutter_hbb/utils/multi_window_manager.dart';
 import 'package:flutter_hbb/utils/platform_channel.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
@@ -858,30 +859,10 @@ class OverlayDialogManager {
     final overlayState = _overlayKeyState.state;
     if (overlayState == null) return;
 
-    // compute overlay position
-    final screenW = MediaQuery.of(globalKey.currentContext!).size.width;
-    final screenH = MediaQuery.of(globalKey.currentContext!).size.height;
-    const double overlayW = 200;
-    const double overlayH = 45;
-    final left = (screenW - overlayW) / 2;
-    final top = screenH - overlayH - 80;
-
-    final overlay = OverlayEntry(builder: (context) {
-      final session = ffi ?? gFFI;
-      return DraggableMobileActions(
-        position: Offset(left, top),
-        width: overlayW,
-        height: overlayH,
-        onBackPressed: () => session.inputModel.tap(MouseButtons.right),
-        onHomePressed: () => session.inputModel.tap(MouseButtons.wheel),
-        onRecentPressed: () async {
-          session.inputModel.sendMouse('down', MouseButtons.wheel);
-          await Future.delayed(const Duration(milliseconds: 500));
-          session.inputModel.sendMouse('up', MouseButtons.wheel);
-        },
-        onHidePressed: () => hideMobileActionsOverlay(),
-      );
-    });
+    final overlay = makeMobileActionsOverlayEntry(
+      () => hideMobileActionsOverlay(),
+      ffi: ffi,
+    );
     overlayState.insert(overlay);
     _mobileActionsOverlayEntry = overlay;
     mobileActionsOverlayVisible.value = true;
@@ -907,6 +888,45 @@ class OverlayDialogManager {
   bool existing(String tag) {
     return _dialogs.keys.contains(tag);
   }
+}
+
+makeMobileActionsOverlayEntry(VoidCallback? onHide, {FFI? ffi}) {
+  final position = SimpleWrapper(Offset(0, 0));
+  makeMobileActions(BuildContext context, double s) {
+    final scale = s < 0.85 ? 0.85 : s;
+    final session = ffi ?? gFFI;
+    // compute overlay position
+    final screenW = MediaQuery.of(context).size.width;
+    final screenH = MediaQuery.of(context).size.height;
+    const double overlayW = 200;
+    const double overlayH = 45;
+    final left = (screenW - overlayW * scale) / 2;
+    final top = screenH - (overlayH + 80) * scale;
+    position.value = Offset(left, top);
+    return DraggableMobileActions(
+      scale: scale,
+      position: position,
+      width: overlayW,
+      height: overlayH,
+      onBackPressed: () => session.inputModel.tap(MouseButtons.right),
+      onHomePressed: () => session.inputModel.tap(MouseButtons.wheel),
+      onRecentPressed: () async {
+        session.inputModel.sendMouse('down', MouseButtons.wheel);
+        await Future.delayed(const Duration(milliseconds: 500));
+        session.inputModel.sendMouse('up', MouseButtons.wheel);
+      },
+      onHidePressed: onHide,
+    );
+  }
+
+  return OverlayEntry(builder: (context) {
+    if (isDesktop) {
+      final c = Provider.of<CanvasModel>(context);
+      return makeMobileActions(context, c.scale * 2.0);
+    } else {
+      return makeMobileActions(globalKey.currentContext!, 1.0);
+    }
+  });
 }
 
 void showToast(String text, {Duration timeout = const Duration(seconds: 3)}) {
@@ -988,7 +1008,8 @@ class CustomAlertDialog extends StatelessWidget {
           return KeyEventResult.handled; // avoid TextField exception on escape
         } else if (!tabTapped &&
             onSubmit != null &&
-            key.logicalKey == LogicalKeyboardKey.enter) {
+            (key.logicalKey == LogicalKeyboardKey.enter ||
+                key.logicalKey == LogicalKeyboardKey.numpadEnter)) {
           if (key is RawKeyDownEvent) onSubmit?.call();
           return KeyEventResult.handled;
         } else if (key.logicalKey == LogicalKeyboardKey.tab) {
@@ -1401,6 +1422,9 @@ String translate(String name) {
   return platformFFI.translate(name, localeName);
 }
 
+// This function must be kept the same as the one in rust and sciter code.
+// rust: libs/hbb_common/src/config.rs -> option2bool()
+// sciter: Does not have the function, but it should be kept the same.
 bool option2bool(String option, String value) {
   bool res;
   if (option.startsWith("enable-")) {
@@ -1408,7 +1432,6 @@ bool option2bool(String option, String value) {
   } else if (option.startsWith("allow-") ||
       option == "stop-service" ||
       option == kOptionDirectServer ||
-      option == "stop-rendezvous-service" ||
       option == kOptionForceAlwaysRelay) {
     res = value == "Y";
   } else {
@@ -1425,7 +1448,6 @@ String bool2option(String option, bool b) {
   } else if (option.startsWith('allow-') ||
       option == "stop-service" ||
       option == kOptionDirectServer ||
-      option == "stop-rendezvous-service" ||
       option == kOptionForceAlwaysRelay) {
     res = b ? 'Y' : defaultOptionNo;
   } else {
@@ -2364,7 +2386,13 @@ Future<void> onActiveWindowChanged() async {
       await windowManager.setPreventClose(false);
       await windowManager.close();
       if (isMacOS) {
-        RdPlatformChannel.instance.terminate();
+        // If we call without delay, `flutter/macos/Runner/MainFlutterWindow.swift` can handle the "terminate" event.
+        // But the app will not close.
+        //
+        // No idea why we need to delay here, `terminate()` itself is also an async function.
+        Future.delayed(Duration.zero, () {
+          RdPlatformChannel.instance.terminate();
+        });
       }
     }
   }
@@ -3255,7 +3283,8 @@ Widget buildPresetPasswordWarning() {
                 translate("Security Alert"),
                 style: TextStyle(
                   color: Colors.red,
-                  fontSize: 20,
+                  fontSize:
+                      18, // https://github.com/rustdesk/rustdesk-server-pro/issues/261
                   fontWeight: FontWeight.bold,
                 ),
               )).paddingOnly(bottom: 8),
@@ -3345,3 +3374,27 @@ get defaultOptionNo => isCustomClient ? 'N' : '';
 get defaultOptionWhitelist => isCustomClient ? ',' : '';
 get defaultOptionAccessMode => isCustomClient ? 'custom' : '';
 get defaultOptionApproveMode => isCustomClient ? 'password-click' : '';
+
+// `setMovable()` is only supported on macOS.
+//
+// On macOS, the window can be dragged by the tab bar by default.
+// We need to disable the movable feature to prevent the window from being dragged by the tabs in the tab bar.
+//
+// When we drag the blank tab bar (not the tab), the window will be dragged normally by adding the `onPanStart` handle.
+//
+// See the following code for more details:
+// https://github.com/rustdesk/rustdesk/blob/ce1dac3b8613596b4d8ae981275f9335489eb935/flutter/lib/desktop/widgets/tabbar_widget.dart#L385
+// https://github.com/rustdesk/rustdesk/blob/ce1dac3b8613596b4d8ae981275f9335489eb935/flutter/lib/desktop/widgets/tabbar_widget.dart#L399
+//
+// @platforms macos
+disableWindowMovable(int? windowId) {
+  if (!isMacOS) {
+    return;
+  }
+
+  if (windowId == null) {
+    windowManager.setMovable(false);
+  } else {
+    WindowController.fromWindowId(windowId).setMovable(false);
+  }
+}

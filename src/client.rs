@@ -1052,7 +1052,7 @@ impl VideoHandler {
         log::info!("new video handler for display #{_display}, format: {format:?}, luid: {luid:?}");
         VideoHandler {
             decoder: Decoder::new(format, luid),
-            rgb: ImageRgb::new(ImageFormat::ARGB, crate::get_dst_stride_rgba()),
+            rgb: ImageRgb::new(ImageFormat::ARGB, crate::get_dst_align_rgba()),
             texture: std::ptr::null_mut(),
             recorder: Default::default(),
             record: false,
@@ -1105,7 +1105,7 @@ impl VideoHandler {
     /// Reset the decoder, change format if it is Some
     pub fn reset(&mut self, format: Option<CodecFormat>) {
         #[cfg(target_os = "macos")]
-        self.rgb.set_stride(crate::get_dst_stride_rgba());
+        self.rgb.set_align(crate::get_dst_align_rgba());
         let luid = Self::get_adapter_luid();
         let format = format.unwrap_or(self.decoder.format());
         self.decoder = Decoder::new(format, luid);
@@ -1286,7 +1286,9 @@ impl LoginConfigHandler {
         self.session_id = sid;
         self.supported_encoding = Default::default();
         self.restarting_remote_device = false;
-        self.force_relay = !self.get_option("force-always-relay").is_empty() || force_relay;
+        self.force_relay =
+            config::option2bool("force-always-relay", &self.get_option("force-always-relay"))
+                || force_relay;
         if let Some((real_id, server, key)) = &self.other_server {
             let other_server_key = self.get_option("other-server-key");
             if !other_server_key.is_empty() && key.is_empty() {
@@ -1451,6 +1453,10 @@ impl LoginConfigHandler {
     /// # Arguments
     ///
     /// * `name` - The name of the option to toggle.
+    ///
+    // It's Ok to check the option empty in this function.
+    // `toggle_option()` is only called in a session.
+    // Custom client advanced settings will not affact this function.
     pub fn toggle_option(&mut self, name: String) -> Option<Message> {
         let mut option = OptionMessage::default();
         let mut config = self.load_config();
@@ -1707,6 +1713,10 @@ impl LoginConfigHandler {
     /// # Arguments
     ///
     /// * `name` - The name of the toggle option.
+    ///
+    // It's Ok to check the option empty in this function.
+    // `get_toggle_option()` is only called in a session.
+    // Custom client advanced settings will not affact this function.
     pub fn get_toggle_option(&self, name: &str) -> bool {
         if name == "show-remote-cursor" {
             self.config.show_remote_cursor.v

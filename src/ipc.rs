@@ -970,10 +970,29 @@ pub async fn test_rendezvous_server() -> ResultType<()> {
     Ok(())
 }
 
-#[tokio::main(flavor = "current_thread")]
-pub async fn test_ipc_connection() -> ResultType<()> {
-    connect(1000, "").await?;
-    Ok(())
+#[cfg(windows)]
+pub fn is_ipc_file_exist(suffix: &str) -> ResultType<bool> {
+    // Not change this to std::path::Path::exists, unless it can be ensured that it can find the ipc which occupied by a process that taskkill can't kill.
+    let prefix = "\\\\.\\pipe\\";
+    let file_name = Config::ipc_path(suffix).replace(prefix, "");
+    let mut err = None;
+    for entry in std::fs::read_dir(prefix)? {
+        match entry {
+            Ok(entry) => {
+                if entry.file_name().into_string().unwrap_or_default() == file_name {
+                    return Ok(true);
+                }
+            }
+            Err(e) => {
+                err = Some(e);
+            }
+        }
+    }
+    if let Some(e) = err {
+        Err(e.into())
+    } else {
+        Ok(false)
+    }
 }
 
 #[tokio::main(flavor = "current_thread")]

@@ -2018,6 +2018,23 @@ pub fn is_disable_installation() -> bool {
     is_some_hard_opton("disable-installation")
 }
 
+// This function must be kept the same as the one in flutter and sciter code.
+// flutter: flutter/lib/common.dart -> option2bool()
+// sciter: Does not have the function, but it should be kept the same.
+pub fn option2bool(option: &str, value: &str) -> bool {
+    if option.starts_with("enable-") {
+        value != "N"
+    } else if option.starts_with("allow-")
+        || option == "stop-service"
+        || option == keys::OPTION_DIRECT_SERVER
+        || option == "force-always-relay"
+    {
+        value == "Y"
+    } else {
+        value != "N"
+    }
+}
+
 pub mod keys {
     pub const OPTION_VIEW_ONLY: &str = "view_only";
     pub const OPTION_SHOW_MONITORS_TOOLBAR: &str = "show_monitors_toolbar";
@@ -2093,6 +2110,13 @@ pub mod keys {
     pub const OPTION_FLUTTER_PEER_CARD_UI_TYLE: &str = "peer-card-ui-type";
     pub const OPTION_FLUTTER_CURRENT_AB_NAME: &str = "current-ab-name";
 
+    // android floating window options
+    pub const OPTION_DISABLE_FLOATING_WINDOW: &str = "disable-floating-window";
+    pub const OPTION_FLOATING_WINDOW_SIZE: &str = "floating-window-size";
+    pub const OPTION_FLOATING_WINDOW_UNTOUCHABLE: &str = "floating-window-untouchable";
+    pub const OPTION_FLOATING_WINDOW_TRANSPARENCY: &str = "floating-window-transparency";
+    pub const OPTION_FLOATING_WINDOW_SVG: &str = "floating-window-svg";
+
     // proxy settings
     // The following options are not real keys, they are just used for custom client advanced settings.
     // The real keys are in Config2::socks.
@@ -2148,6 +2172,11 @@ pub mod keys {
         OPTION_FLUTTER_PEER_TAB_VISIBLE,
         OPTION_FLUTTER_PEER_CARD_UI_TYLE,
         OPTION_FLUTTER_CURRENT_AB_NAME,
+        OPTION_DISABLE_FLOATING_WINDOW,
+        OPTION_FLOATING_WINDOW_SIZE,
+        OPTION_FLOATING_WINDOW_UNTOUCHABLE,
+        OPTION_FLOATING_WINDOW_TRANSPARENCY,
+        OPTION_FLOATING_WINDOW_SVG,
     ];
     // DEFAULT_SETTINGS, OVERWRITE_SETTINGS
     pub const KEYS_SETTINGS: &[&str] = &[

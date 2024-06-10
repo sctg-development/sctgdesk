@@ -3,7 +3,6 @@ use crate::{
     common::{is_keyboard_mode_supported, make_fd_to_json},
     flutter::{
         self, session_add, session_add_existed, session_start_, sessions, try_sync_peer_option,
-        FlutterHandler,
     },
     input::*,
     ui_interface::{self, *},
@@ -2181,7 +2180,8 @@ pub fn session_request_new_display_init_msgs(session_id: SessionID, display: usi
 pub mod server_side {
     use hbb_common::{config, log};
     use jni::{
-        objects::{JClass, JString},
+        errors::{Error as JniError, Result as JniResult},
+        objects::{JClass, JObject, JString},
         sys::jstring,
         JNIEnv,
     };
@@ -2238,5 +2238,21 @@ pub mod server_side {
     #[no_mangle]
     pub unsafe extern "system" fn Java_ffi_FFI_refreshScreen(_env: JNIEnv, _class: JClass) {
         crate::server::video_service::refresh()
+    }
+
+    #[no_mangle]
+    pub unsafe extern "system" fn Java_ffi_FFI_getLocalOption(
+        env: JNIEnv,
+        _class: JClass,
+        key: JString,
+    ) -> jstring {
+        let mut env = env;
+        let res = if let Ok(key) = env.get_string(&key) {
+            let key: String = key.into();
+            super::get_local_option(key)
+        } else {
+            "".into()
+        };
+        return env.new_string(res).unwrap_or_default().into_raw();
     }
 }
