@@ -124,26 +124,10 @@ impl ClipboardContext {
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use hbb_common::compress::decompress;
 use hbb_common::{
-    allow_err,
-    anyhow::{anyhow, Context},
-    bail, base64,
-    bytes::Bytes,
-    compress::compress as compress_func,
-    config::{self, Config, CONNECT_TIMEOUT, READ_TIMEOUT},
-    futures_util::future::poll_fn,
-    get_version_number, log,
-    message_proto::*,
-    protobuf::{Enum, Message as _},
-    rendezvous_proto::*,
-    socket_client,
-    sodiumoxide::crypto::{box_, secretbox, sign},
-    tcp::FramedStream,
-    timeout,
-    tokio::{
+    allow_err, anyhow::{anyhow, Context}, bail, base64, bytes::Bytes, compress::compress as compress_func, config::{self, Config, CONNECT_TIMEOUT, READ_TIMEOUT}, futures_util::future::poll_fn, get_version_number, log, message_proto::*, protobuf::{Enum, Message as _}, proxy::IntoUrl, rendezvous_proto::*, socket_client, sodiumoxide::crypto::{box_, secretbox, sign}, tcp::FramedStream, timeout, tokio::{
         self,
         time::{Duration, Instant, Interval},
-    },
-    ResultType,
+    }, ResultType
 };
 // #[cfg(any(target_os = "android", target_os = "ios", feature = "cli"))]
 use hbb_common::{config::RENDEZVOUS_PORT, futures::future::join_all};
@@ -968,7 +952,9 @@ pub fn check_software_update() {
 
 #[tokio::main(flavor = "current_thread")]
 async fn check_software_update_() -> hbb_common::ResultType<()> {
-    let url = "https://github.com/rustdesk/rustdesk/releases/latest";
+    let url=format!("{}/api/software/releases/latest",get_api_server("".to_owned(), "".to_owned())).to_owned();
+    log::info!("URL for checking software updates: {}", url);
+    //let url = "https://github.com/rustdesk/rustdesk/releases/latest";
     let latest_release_response = create_http_client_async().get(url).send().await?;
     let latest_release_version = latest_release_response
         .url()
