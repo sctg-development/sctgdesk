@@ -1306,6 +1306,7 @@ pub fn main_get_software_update_url() -> String {
     if get_local_option("enable-check-update".to_string()) != "N" {
         let rx = crate::common::check_software_update();
         let _ = rx.recv();
+        log::info!("Software update check done. Return the update url. {}",crate::common::SOFTWARE_UPDATE_URL.lock().unwrap().clone());
     }
     crate::common::SOFTWARE_UPDATE_URL.lock().unwrap().clone()
 }
