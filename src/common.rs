@@ -16,6 +16,8 @@ pub enum GrabState {
     Exit,
 }
 
+use std::sync::mpsc;
+
 #[cfg(all(target_os = "linux", feature = "unix-file-copy-paste"))]
 static X11_CLIPBOARD: once_cell::sync::OnceCell<x11_clipboard::Clipboard> =
     once_cell::sync::OnceCell::new();
@@ -946,8 +948,13 @@ pub fn is_modifier(evt: &KeyEvent) -> bool {
     }
 }
 
-pub fn check_software_update() {
-    std::thread::spawn(move || allow_err!(check_software_update_()));
+pub fn check_software_update() -> mpsc::Receiver<()> {
+    let (tx, rx) = mpsc::channel();
+    std::thread::spawn(move || {
+        let _ = check_software_update_();
+        let _ = tx.send(());
+    });
+    rx
 }
 
 #[tokio::main(flavor = "current_thread")]
