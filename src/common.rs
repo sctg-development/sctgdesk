@@ -974,6 +974,11 @@ async fn check_software_update_() -> hbb_common::ResultType<()> {
 
     if get_version_number(&latest_release_version) > get_version_number(crate::VERSION) {
         *SOFTWARE_UPDATE_URL.lock().unwrap() = response_url;
+        log::info!(
+            "New version available: {} (current: {})",
+            SOFTWARE_UPDATE_URL.lock().unwrap(),
+            crate::VERSION
+        );
     }
     Ok(())
 }
