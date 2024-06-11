@@ -410,7 +410,6 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   }
 
   Future<Widget> buildHelpCards() async {
-    debugPrint("buildHelpCards updateUrl: $updateUrl, uriPrefix: ${bind.mainUriPrefixSync()}");
     if (!bind.isCustomClient() &&
         updateUrl.isNotEmpty &&
         !isCardClosed &&

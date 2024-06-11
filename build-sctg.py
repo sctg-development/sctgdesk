@@ -535,6 +535,7 @@ def sctgdesk_customization(args):
         replace_in_all_typed_files('rc', 'RustDesk', f'{APP_NAME}')
         replace_in_all_typed_files('rc', 'rustdesk', f'{APP_NAME}'.lower())
         replace_in_file('src/common.rs', 'https://admin.rustdesk.com', f'https://{API_SERVER}')
+        replace_in_file('flutter/lib/desktop/pages/desktop_home_page.dart', "contains('rustdesk')", f"contains('{APP_NAME}')".lower())
         replace_in_all_dart_files('RustDesk', f'{APP_NAME}')
         replace_in_all_dart_files('https://rustdesk.com/download', f'{API_SERVER_PROTOCOL}://{API_SERVER}/api/software/download')
         replace_in_all_rust_files('RustDesk', f'{APP_NAME}')
