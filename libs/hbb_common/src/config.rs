@@ -1284,6 +1284,7 @@ impl PeerConfig {
             keys::OPTION_TOUCH_MODE,
             keys::OPTION_I444,
             keys::OPTION_SWAP_LEFT_RIGHT_MOUSE,
+            keys::OPTION_COLLAPSE_TOOLBAR,
         ]
         .map(|key| {
             mp.insert(key.to_owned(), UserDefaultConfig::read(key));
@@ -2100,6 +2101,9 @@ pub mod keys {
     pub const OPTION_FLOATING_WINDOW_TRANSPARENCY: &str = "floating-window-transparency";
     pub const OPTION_FLOATING_WINDOW_SVG: &str = "floating-window-svg";
 
+    // android keep screen on
+    pub const OPTION_KEEP_SCREEN_ON: &str = "keep-screen-on";
+
     pub const OPTION_DISABLE_GROUP_PANEL: &str = "disable-group-panel";
     pub const OPTION_PRE_ELEVATE_SERVICE: &str = "pre-elevate-service";
 
@@ -2163,6 +2167,7 @@ pub mod keys {
         OPTION_FLOATING_WINDOW_UNTOUCHABLE,
         OPTION_FLOATING_WINDOW_TRANSPARENCY,
         OPTION_FLOATING_WINDOW_SVG,
+        OPTION_KEEP_SCREEN_ON,
         OPTION_DISABLE_GROUP_PANEL,
         OPTION_PRE_ELEVATE_SERVICE,
     ];

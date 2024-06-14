@@ -408,6 +408,25 @@ impl VideoRenderer {
         }
     }
 
+    fn add_displays(&self, displays: &[i32]) {
+        let mut sessions_lock = self.map_display_sessions.write().unwrap();
+        for display in displays {
+            let d = *display as usize;
+            if !sessions_lock.contains_key(&d) {
+                sessions_lock.insert(
+                    d,
+                    DisplaySessionInfo {
+                        texture_rgba_ptr: 0,
+                        size: (0, 0),
+                        #[cfg(feature = "vram")]
+                        gpu_output_ptr: usize::default(),
+                        notify_render_type: None,
+                    },
+                );
+            }
+        }
+    }
+
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     pub fn on_rgba(&self, display: usize, rgba: &scrap::ImageRgb) -> bool {
         let mut write_lock = self.map_display_sessions.write().unwrap();
@@ -768,9 +787,9 @@ impl InvokeUiSession for FlutterHandler {
     #[inline]
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     fn on_rgba(&self, display: usize, rgba: &mut scrap::ImageRgb) {
-        if self.use_texture_render.load(Ordering::Relaxed) {
-            self.on_rgba_flutter_texture_render(display, rgba);
-        } else {
+        let use_texture_render = self.use_texture_render.load(Ordering::Relaxed);
+        self.on_rgba_flutter_texture_render(use_texture_render, display, rgba);
+        if !use_texture_render {
             self.on_rgba_soft_render(display, rgba);
         }
     }
@@ -1039,9 +1058,22 @@ impl FlutterHandler {
         }
         drop(rgba_write_lock);
 
-        // Non-texture-render UI does not support multiple displays in the one UI session.
-        // It's Ok to notify each session for now.
+        let is_multi_sessions = self.session_handlers.read().unwrap().len() > 1;
         for h in self.session_handlers.read().unwrap().values() {
+            // `map_display_sessions` stores the display indices that are used by the video renderer.
+            let map_display_sessions = h.renderer.map_display_sessions.read().unwrap();
+            // The soft renderer does not support multi ui session for now.
+            if map_display_sessions.len() > 1 {
+                continue;
+            }
+            // If there're multiple ui sessions, we only notify the ui session that has the display.
+            // We must make sure that the display is in the `map_display_sessions`.
+            // `session_start_with_displays()` can guarantee that.
+            if is_multi_sessions {
+                if !map_display_sessions.contains_key(&display) {
+                    continue;
+                }
+            }
             if let Some(stream) = &h.event_stream {
                 stream.add(EventToUI::Rgba(display));
             }
@@ -1050,11 +1082,19 @@ impl FlutterHandler {
 
     #[inline]
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
-    fn on_rgba_flutter_texture_render(&self, display: usize, rgba: &mut scrap::ImageRgb) {
+    fn on_rgba_flutter_texture_render(
+        &self,
+        use_texture_render: bool,
+        display: usize,
+        rgba: &mut scrap::ImageRgb,
+    ) {
         for (_, session) in self.session_handlers.read().unwrap().iter() {
-            if session.renderer.on_rgba(display, rgba) {
-                if let Some(stream) = &session.event_stream {
-                    stream.add(EventToUI::Rgba(display));
+            if use_texture_render || session.renderer.map_display_sessions.read().unwrap().len() > 1
+            {
+                if session.renderer.on_rgba(display, rgba) {
+                    if let Some(stream) = &session.event_stream {
+                        stream.add(EventToUI::Rgba(display));
+                    }
                 }
             }
         }
@@ -1517,6 +1557,21 @@ pub fn session_register_gpu_texture(_session_id: SessionID, _display: usize, _ou
             .get(&_session_id)
         {
             h.renderer.register_gpu_output(_display, _output_ptr);
+            break;
+        }
+    }
+}
+
+pub fn session_add_displays(session_id: &SessionID, displays: &[i32]) {
+    for s in sessions::get_sessions() {
+        if let Some(h) = s
+            .ui_handler
+            .session_handlers
+            .read()
+            .unwrap()
+            .get(session_id)
+        {
+            h.renderer.add_displays(displays);
             break;
         }
     }
