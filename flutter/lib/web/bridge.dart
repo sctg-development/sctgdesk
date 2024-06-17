@@ -59,7 +59,10 @@ class RustdeskImpl {
   }
 
   String sessionAddExistedSync(
-      {required String id, required UuidValue sessionId, dynamic hint}) {
+      {required String id,
+      required UuidValue sessionId,
+      required Int32List displays,
+      dynamic hint}) {
     return '';
   }
 
@@ -1408,10 +1411,6 @@ class RustdeskImpl {
 
   bool mainIsLoginWayland({dynamic hint}) {
     return false;
-  }
-
-  Future<void> mainStartPa({dynamic hint}) {
-    throw UnimplementedError();
   }
 
   bool mainHideDocker({dynamic hint}) {
