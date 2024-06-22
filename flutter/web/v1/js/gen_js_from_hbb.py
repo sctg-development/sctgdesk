@@ -34,7 +34,7 @@ def main():
    print('}')
    check_if_retry = ['', False]
    KEY_MAP = ['', False]
-   for ln in open('../../../src/client.rs', encoding='utf-8'):
+   for ln in open('../../../../src/client.rs', encoding='utf-8'):
       ln = ln.strip()
       if 'check_if_retry' in ln:
          check_if_retry[1] = True

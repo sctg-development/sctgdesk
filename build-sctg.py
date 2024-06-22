@@ -556,7 +556,7 @@ def sctgdesk_customization(args):
         if not args.disable_api_server_forced:
             replace_in_file('flutter/web/client.html', '__API_SERVER__', f'{API_SERVER_PROTOCOL}://{API_SERVER}')
             insert_line_after('src/common.rs','pub fn get_api_server',f'    return format!("{API_SERVER_PROTOCOL}://{API_SERVER}");')
-            insert_line_after('flutter/web/js/src/globals.js','function getApiServer()',f'  return "{API_SERVER_PROTOCOL}://{API_SERVER}";')
+            insert_line_after('flutter/web/v1/js/src/globals.js','function getApiServer()',f'  return "{API_SERVER_PROTOCOL}://{API_SERVER}";')
     if args.local_build:
         replace_in_file('flutter/lib/models/platform_model.dart', 'RustdeskImpl', f'{APP_NAME_CAPITALIZED}Impl')
         replace_in_file('flutter/lib/models/native_model.dart', 'RustdeskImpl', f'{APP_NAME_CAPITALIZED}Impl')
