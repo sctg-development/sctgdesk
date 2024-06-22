@@ -66,7 +66,7 @@ def main():
    print('export const KEY_MAP: any = {')
    print(KEY_MAP[0])
    print('}')
-   for ln in open('../../../Cargo.toml', encoding='utf-8'):
+   for ln in open('../../../../Cargo.toml', encoding='utf-8'):
       if ln.startswith('version ='):
          print('export const ' + ln)
 
