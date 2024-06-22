@@ -109,12 +109,16 @@ extern "C" bool MacCheckAdminAuthorization() {
     return Elevate(NULL, NULL);
 }
 
+// https://gist.github.com/briankc/025415e25900750f402235dbf1b74e42
 extern "C" float BackingScaleFactor(uint32_t display) {
-    display -= 1;
     NSArray<NSScreen *> *screens = [NSScreen screens];
-    if (display >= 0 && display < [screens count]) {
-        NSScreen* s = [screens objectAtIndex:display];
-        if (s) return [s backingScaleFactor];
+    for (NSScreen *screen in screens) {
+        NSDictionary *deviceDescription = [screen deviceDescription];
+        NSNumber *screenNumber = [deviceDescription objectForKey:@"NSScreenNumber"];
+        CGDirectDisplayID screenDisplayID = [screenNumber unsignedIntValue];
+        if (screenDisplayID == display) {
+            return [screen backingScaleFactor];
+        }
     }
     return 1;
 }

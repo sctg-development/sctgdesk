@@ -315,11 +315,11 @@ class _GeneralState extends State<_General> {
           children: [
             service(),
             theme(),
+            _Card(title: 'Language', children: [language()]),
             hwcodec(),
             audio(context),
             record(context),
             WaylandCard(),
-            _Card(title: 'Language', children: [language()]),
             other()
           ],
         ).marginOnly(bottom: _kListViewBottomMargin));
@@ -413,6 +413,12 @@ class _GeneralState extends State<_General> {
             'Check for software update on startup',
             kOptionEnableCheckUpdate,
             isServer: false,
+          ),
+        if (isWindows && !bind.isOutgoingOnly())
+          _OptionCheckBox(
+            context,
+            'Capture screen using DirectX',
+            kOptionDirectxCapture,
           )
       ],
     ];
@@ -504,9 +510,9 @@ class _GeneralState extends State<_General> {
   Widget record(BuildContext context) {
     final showRootDir = isWindows && bind.mainIsInstalled();
     return futureBuilder(future: () async {
-      String user_dir = await bind.mainVideoSaveDirectory(root: false);
+      String user_dir = bind.mainVideoSaveDirectory(root: false);
       String root_dir =
-          showRootDir ? await bind.mainVideoSaveDirectory(root: true) : '';
+          showRootDir ? bind.mainVideoSaveDirectory(root: true) : '';
       bool user_dir_exists = await Directory(user_dir).exists();
       bool root_dir_exists =
           showRootDir ? await Directory(root_dir).exists() : false;
